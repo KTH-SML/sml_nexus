@@ -1,0 +1,8 @@
+<launch>
+        <arg name="mode" default="1"/>
+        <node pkg="windowx_driver" type="widowx250_node.py" name="widowx_arm5" output="screen" >
+                <param name="mode" value="$(arg mode)"/>
+                <rosparam param="init_joints">[1024,1860,2545,2340,2045]</rosparam>
+        </node>
+</launch>
+
