@@ -104,7 +104,7 @@ double min_speed = 0.005; //minimum that will stop the motor command if reached,
 // PID Parameters, respectively Kp, Ki and Kd
 float PID_default_params[] = { 160, 90, 0.5 };
 // Feedforward default gain
-float feedForwardPolyDefault[] = { 80, 0, 0, 0, 0, 0};
+float feedForwardPolyDefault[] = { 4, 270, 4900, -23000, 40000, -23000};
 
 float PID_UL_params[3];
 float PID_UR_params[3];
