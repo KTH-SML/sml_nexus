@@ -85,6 +85,11 @@ double URspeed = 0;
 double LLspeed = 0;
 double LRspeed = 0;
 
+double polyCmdUL = 0;
+double polyCmdUR = 0;
+double polyCmdLL = 0;
+double polyCmdLR = 0;
+
 /************ Robot-specific constants ************/
 const int encoder_CPR = 1536;
 const float wheel_radius = 0.05;  //Wheel radius (in m)
@@ -99,17 +104,17 @@ double min_speed = 0.005; //minimum that will stop the motor command if reached,
 // PID Parameters, respectively Kp, Ki and Kd
 float PID_default_params[] = { 160, 90, 0.5 };
 // Feedforward default gain
-float feedForwardGainDefault = 80;
+float feedForwardPolyDefault[] = { 80, 0, 0, 0, 0, 0};
 
 float PID_UL_params[3];
 float PID_UR_params[3];
 float PID_LL_params[3];
 float PID_LR_params[3];
 
-float feedForwardGainUL;
-float feedForwardGainUR;
-float feedForwardGainLL;
-float feedForwardGainLR;
+float feedForwardPolyUL[6];
+float feedForwardPolyUR[6];
+float feedForwardPolyLL[6];
+float feedForwardPolyLR[6];
 
 //PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, Direction) 
 PID PID_UL(&measUL, &outputPIDUL, &ULspeed, PID_default_params[0], PID_default_params[1], PID_default_params[2], DIRECT);
@@ -129,6 +134,8 @@ PID PID_LR(&measLR, &outputPIDLR, &LRspeed, PID_default_params[0], PID_default_p
 //}
 
 
+
+
 /************ Velocity command callback function ************/
 void messageCb( const geometry_msgs::Twist& msg){
   vx = (float)msg.linear.x;
@@ -137,6 +144,8 @@ void messageCb( const geometry_msgs::Twist& msg){
 
   lastReceivedCommTimeout = millis() + commTimeout;
 }
+
+
 
 /************ PID tuning callback function ************/
 void pidCb( const std_msgs :: Float32MultiArray& msg){
@@ -150,12 +159,17 @@ void pidCb( const std_msgs :: Float32MultiArray& msg){
 //  }
 }
 
+
+
+
 /************ Sign function ************/
 static inline int8_t sgn(int val) {
  if (val < 0) return -1;
  if (val==0) return 0;
  return 1;
 }
+
+
 
 //------------------------------------
 // Setup ROS publishers & subscribers
@@ -170,6 +184,7 @@ std_msgs :: Float32MultiArray pwm_msg;
 ros::Publisher pwm_pub("pwm", &pwm_msg);
 
 
+
 /************ PID parameters and setup function ************/
 void setupPIDParams(){
   //------------------------------------------------------------------------------------
@@ -181,8 +196,13 @@ void setupPIDParams(){
     PID_UL_params[2] = PID_default_params[2];
     nh.logwarn("UL motor PID: loading default values;");
   }
-  if(!nh.getParam("feedforward_UL", &feedForwardGainUL)){
-    feedForwardGainUL = feedForwardGainDefault;
+  if(!nh.getParam("feedforward_UL", feedForwardPolyUL, 6, 2000)){
+    feedForwardPolyUL[0] = feedForwardPolyDefault[0];
+    feedForwardPolyUL[1] = feedForwardPolyDefault[1];
+    feedForwardPolyUL[2] = feedForwardPolyDefault[2];
+    feedForwardPolyUL[3] = feedForwardPolyDefault[3];
+    feedForwardPolyUL[4] = feedForwardPolyDefault[4];
+    feedForwardPolyUL[5] = feedForwardPolyDefault[5];
     nh.logwarn("UL motor feedforward gain: loading default values;");
   }
   if(!nh.getParam("PID_UR", PID_UR_params, 3, 2000)){
@@ -191,8 +211,13 @@ void setupPIDParams(){
     PID_UR_params[2] = PID_default_params[2];
     nh.logwarn("UR motor PID: loading default values;");
   }
-  if(!nh.getParam("feedforward_UR", &feedForwardGainUR)){
-    feedForwardGainUR = feedForwardGainDefault;
+  if(!nh.getParam("feedforward_UR", feedForwardPolyUR, 6, 2000)){
+    feedForwardPolyUR[0] = feedForwardPolyDefault[0];
+    feedForwardPolyUR[1] = feedForwardPolyDefault[1];
+    feedForwardPolyUR[2] = feedForwardPolyDefault[2];
+    feedForwardPolyUR[3] = feedForwardPolyDefault[3];
+    feedForwardPolyUR[4] = feedForwardPolyDefault[4];
+    feedForwardPolyUR[5] = feedForwardPolyDefault[5];
     nh.logwarn("UR motor feedforward gain: loading default values;");
   }
   if(!nh.getParam("PID_LL", PID_LL_params, 3, 2000)){
@@ -201,8 +226,13 @@ void setupPIDParams(){
     PID_LL_params[2] = PID_default_params[2];
     nh.logwarn("LL motor PID: loading default values;");
   }
-  if(!nh.getParam("feedforward_LL", &feedForwardGainLL)){
-    feedForwardGainLL = feedForwardGainDefault;
+  if(!nh.getParam("feedforward_LL", feedForwardPolyLL, 6, 2000)){
+    feedForwardPolyLL[0] = feedForwardPolyDefault[0];
+    feedForwardPolyLL[1] = feedForwardPolyDefault[1];
+    feedForwardPolyLL[2] = feedForwardPolyDefault[2];
+    feedForwardPolyLL[3] = feedForwardPolyDefault[3];
+    feedForwardPolyLL[4] = feedForwardPolyDefault[4];
+    feedForwardPolyLL[5] = feedForwardPolyDefault[5];
     nh.logwarn("LL motor feedforward gain: loading default values;");
   }
   if(!nh.getParam("PID_LR", PID_LR_params, 3, 2000)){
@@ -211,8 +241,13 @@ void setupPIDParams(){
     PID_LR_params[2] = PID_default_params[2];
     nh.logwarn("LR motor PID: loading default values;");
   }
-  if(!nh.getParam("feedforward_LR", &feedForwardGainLR)){
-    feedForwardGainLR = feedForwardGainDefault;
+  if(!nh.getParam("feedforward_LR", feedForwardPolyLR, 6, 2000)){
+    feedForwardPolyLR[0] = feedForwardPolyDefault[0];
+    feedForwardPolyLR[1] = feedForwardPolyDefault[1];
+    feedForwardPolyLR[2] = feedForwardPolyDefault[2];
+    feedForwardPolyLR[3] = feedForwardPolyDefault[3];
+    feedForwardPolyLR[4] = feedForwardPolyDefault[4];
+    feedForwardPolyLR[5] = feedForwardPolyDefault[5];
     nh.logwarn("LR motor feedforward gain: loading default values;");
   }
     
@@ -237,6 +272,8 @@ void setupPIDParams(){
   PID_LR.SetMode(AUTOMATIC);
 }
 
+
+
 /************ Setup topics over ROS ************/
 void setupCommonTopics(){
   nh.subscribe(cmd_sub);
@@ -245,7 +282,134 @@ void setupCommonTopics(){
  //nh.advertise(output_pub);
   nh.advertise(pwm_pub);
 }
-  
+
+
+
+/************ Get wheel velocity commands ************
+              from main velocity command            */  
+void computeWheelVelCmd(){
+  //===================================
+  // Map vx, vy, w to each wheel speed 
+  //===================================
+  ULspeed = constrain(1*vx - 1*vy - sqrt(sq(L1)+sq(L2))*w, -max_speed, max_speed);
+  URspeed = constrain(1*vx + 1*vy + sqrt(sq(L1)+sq(L2))*w, -max_speed, max_speed);
+  LLspeed = constrain(1*vx + 1*vy - sqrt(sq(L1)+sq(L2))*w, -max_speed, max_speed);
+  LRspeed = constrain(1*vx - 1*vy + sqrt(sq(L1)+sq(L2))*w, -max_speed, max_speed);
+}
+
+
+
+/************ Get wheel velocities from encoders  ************/
+void getWheelVel(){
+  //Compute speed:  Get rads from tick increments       convert to rad/s      |v=wr| convert to m/s
+  measLR = ((double)intCount3/1536)*(2*3.1415) * ((double)1000000/updateOldness) * wheel_radius;
+  intCount3 = 0;
+  measUR = ((float)intCount4/1536)*(2*3.1415) * ((float)1000000/updateOldness) * wheel_radius;
+  intCount4 = 0;
+  measUL = ((float)intCount1/1536)*(2*3.1415) * ((float)1000000/updateOldness) * wheel_radius;
+  intCount1 = 0;
+  measLL = ((float)intCount2/1536)*(2*3.1415) * ((float)1000000/updateOldness) * wheel_radius;
+  intCount2 = 0;
+}
+
+
+
+/************ Compute motor inputs from feedforward and PID  ************/
+void computeMotorInputs(){
+  //--------------------------------------------------
+  //   For each motor, check if velocity command is
+  // larger than minimum speed and compute PID output
+  //
+  //      Feedforward is a 6th degree polynomial
+  //    matching the PWM/Velocity response of each
+  //                      motor
+  //--------------------------------------------------
+  //For UL wheel motor
+  if (abs(ULspeed) > min_speed){
+    // Compute feedforward polynomial command
+    polyCmdUL = 0;
+    for(int i=0; i<6; i++){
+      polyCmdUL =+ feedForwardPolyUL[i]*pow((float)ULspeed,i);
+    }
+    // Compute PID output
+    PID_UL.Compute();
+    pwmUL = (int)polyCmdUL + (int)outputPIDUL;
+    // Constrain to minimum PWM command
+    //if (ULspeed > 0) pwmUL = constrain( pwmUL, 10, 200 );
+    //else             pwmUL = constrain( pwmUL, -200, -10 );
+  }
+  //--------
+  //For UR wheel motor
+  if (abs(URspeed) > min_speed){
+    // Compute feedforward polynomial command
+    polyCmdUR = 0;
+    for(int i=0; i<6; i++){
+      polyCmdUR =+ feedForwardPolyUR[i]*pow((float)URspeed,i);
+    }
+    // Compute PID output
+    PID_UR.Compute();
+    pwmUR = (int)polyCmdUR + (int)outputPIDUR;
+    // Constrain to minimum PWM command
+    //if (URspeed > 0) pwmUR = constrain( pwmUR, 10, 200 );
+    //else             pwmUR = constrain( pwmUR, -200, -10 );
+  }
+  //---------
+  //For LL wheel motor
+  if (abs(LLspeed) > min_speed){
+    // Compute feedforward polynomial command
+    polyCmdLL = 0;
+    for(int i=0; i<6; i++){
+      polyCmdLL =+ feedForwardPolyLL[i]*pow((float)LLspeed,i);
+    }
+    // Compute PID output
+    PID_LL.Compute();
+    pwmLL = (int)polyCmdLL + (int)outputPIDLL;
+    // Constrain to minimum PWM command
+    //if (LLspeed > 0) pwmLL = constrain( pwmLL, 10, 200 );
+    //else             pwmLL = constrain( pwmLL, -200, -10 );
+  }
+  //---------
+  //For LR wheel motor
+  if (abs(LRspeed) > min_speed){
+    // Compute feedforward polynomial command
+    polyCmdLR = 0;
+    for(int i=0; i<6; i++){
+      polyCmdLR =+ feedForwardPolyLR[i]*pow((float)LRspeed,i);
+    }
+    // Compute PID output
+    PID_LR.Compute();
+    pwmLR = (int)polyCmdLR + (int)outputPIDLR;
+    // Constrain to minimum PWM command
+    //if (LRspeed > 0) pwmLR = constrain( pwmLR, 10, 200 );
+    //else             pwmLR = constrain( pwmLR, -200, -10 );
+  }       
+}
+
+
+
+/************ Apply previously computed motor command  ************/
+void applyMotorInputs(){
+  //Set motor direction
+  if (pwmUL>0) ULMotor->run(FORWARD);
+  else if (pwmUL<0) ULMotor->run(BACKWARD);
+  else ULMotor->run(RELEASE);
+  if (pwmUR>0) URMotor->run(FORWARD);
+  else if (pwmUR<0) URMotor->run(BACKWARD);
+  else URMotor->run(RELEASE);
+  if (pwmLL>0) LLMotor->run(FORWARD);
+  else if (pwmLL<0) LLMotor->run(BACKWARD);
+  else LLMotor->run(RELEASE);
+  if (pwmLR>0) LRMotor->run(FORWARD);
+  else if (pwmLR<0) LRMotor->run(BACKWARD);
+  else LRMotor->run(RELEASE);
+  //Set motor speeds
+  LRMotor->setSpeed(abs(pwmLR));
+  LLMotor->setSpeed(abs(pwmLL));
+  ULMotor->setSpeed(abs(pwmUL));
+  URMotor->setSpeed(abs(pwmUR));
+}
+
+
 
 /************ Encoders interrupt functions ************/
 void encoderM1A(){
