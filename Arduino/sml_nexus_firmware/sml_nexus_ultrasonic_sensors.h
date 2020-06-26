@@ -152,16 +152,11 @@ void runSensor(){
       case 0:
         //sensorStatusMsg.data = "Trigger";
         //sensorStatusPub.publish(&sensorStatusMsg);
-        SerialDebug.println("Case 0");
         //Reset data
         for (int i=0; i<8; i++) sensorData[i] = 65535; //default value is considered erronous and will be treated as such (if no data received from sensor)
-        SerialDebug.println("Sensor 0 trigger");
         triggerSensor(0);
-        SerialDebug.println("Sensor 1 trigger");
         triggerSensor(1);
-        SerialDebug.println("Sensor 2 trigger");
         triggerSensor(2);
-        SerialDebug.println("Sensor 3 trigger");
         triggerSensor(3);
         sensorStepTimer = sensorTriggerDelay; //Wait for sensor data to be available
         break;
@@ -173,7 +168,6 @@ void runSensor(){
       case 1:
         //sensorStatusMsg.data = "Dist sensor 1";
         //sensorStatusPub.publish(&sensorStatusMsg);
-        SerialDebug.println("Case 1");
         getDistSensor(0);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
@@ -182,7 +176,6 @@ void runSensor(){
       case 2:
         //sensorStatusMsg.data = "Dist sensor 2";
         //sensorStatusPub.publish(&sensorStatusMsg);
-        SerialDebug.println("Case 2");
         getDistSensor(1);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
@@ -191,7 +184,6 @@ void runSensor(){
       case 3:
         //sensorStatusMsg.data = "Dist sensor 3";
         //sensorStatusPub.publish(&sensorStatusMsg);
-        SerialDebug.println("Case 3");
         getDistSensor(2);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
@@ -200,7 +192,6 @@ void runSensor(){
       case 4:
         //sensorStatusMsg.data = "Dist sensor 4";
         //sensorStatusPub.publish(&sensorStatusMsg);
-        SerialDebug.println("Case 4");
         getDistSensor(3);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
@@ -208,7 +199,6 @@ void runSensor(){
       case 5:
         //sensorStatusMsg.data = "Read dist";
         //sensorStatusPub.publish(&sensorStatusMsg);
-        SerialDebug.println("Case 5");
         readSensorData();
         sensorStepTimer = 0;
         break;
@@ -220,7 +210,6 @@ void runSensor(){
       case 6:
         //sensorStatusMsg.data = "Temp sensor 1";
         //sensorStatusPub.publish(&sensorStatusMsg);
-        SerialDebug.println("Case 6");
         getTempSensor(0);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
@@ -229,7 +218,6 @@ void runSensor(){
       case 7:
         //sensorStatusMsg.data = "Temp sensor 2";
         //sensorStatusPub.publish(&sensorStatusMsg);
-        SerialDebug.println("Case 7");
         getTempSensor(1);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
@@ -238,7 +226,6 @@ void runSensor(){
       case 8:
         //sensorStatusMsg.data = "Temp sensor 3";
         //sensorStatusPub.publish(&sensorStatusMsg);
-        SerialDebug.println("Case 8");
         getTempSensor(2);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
@@ -247,7 +234,6 @@ void runSensor(){
       case 9:
         //sensorStatusMsg.data = "Temp sensor 4";
         //sensorStatusPub.publish(&sensorStatusMsg);
-        SerialDebug.println("Case 9");
         getTempSensor(3);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
@@ -255,7 +241,6 @@ void runSensor(){
       case 10:
         //sensorStatusMsg.data = "Read temp and pub";
         //sensorStatusPub.publish(&sensorStatusMsg);
-        SerialDebug.println("Case 10");
         readSensorData();
         sensorStepTimer = 0;
       //------------------------------
@@ -280,13 +265,11 @@ void runSensor(){
 /********************* Transmit Command via the RS485 interface ***************/
 
 void triggerSensor(int id){  // The function is used to trigger the measuring
-  SerialDebug.println("Populate trigger message");
   cmdst[0] = sensorTriggerCmd[0];
   cmdst[1] = sensorTriggerCmd[1];
   cmdst[2] = sensorAddresses[id];
   cmdst[3] = sensorTriggerCmd[3];
   cmdst[4] = sensorTriggerCmd[4];
-  SerialDebug.println("Transmit message");
   transmitCommands();
 }
 void getDistSensor(int id){  // The function is used to read the distance
@@ -307,9 +290,7 @@ void getTempSensor(int id){  // The function is used to read the temperature
 }
 
 void transmitCommands(){  // Send protocol via RS485 interface
-  SerialDebug.println("Compute checksum");
   cmdst[5]=cmdst[0]+cmdst[1]+cmdst[2]+cmdst[3]+cmdst[4];
-  SerialDebug.println("Send bytes");
   delay(1);
   for(int j = 0; j < 6; j++){
     printByte(cmdst[j]);

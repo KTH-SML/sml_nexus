@@ -1,24 +1,12 @@
 #include <ros.h>
 
 /************ ROS Node Handle ************/
-//ros::NodeHandle_<ArduinoHardware, 25, 25, 512, 512> nh;
 ros::NodeHandle  nh;
-#define LED 13
-#define SerialDebug Serial3
 
 #include "sml_nexus_common.h"
 #include "sml_nexus_ultrasonic_sensors.h"
 
-
-
 void setup() {
-
-  SerialDebug.begin(19200);               // Init the debug interface
-  SerialDebug.println("Init debug on Serial 3");
-  
-  pinMode(LED, OUTPUT);
-  digitalWrite(LED, HIGH);
-
   vx = 0;
   vy = 0;
   w = 0;
@@ -53,7 +41,6 @@ void setup() {
   //output_msg.data = (float*)malloc(sizeof(float)*4);
   //pwm_msg.data_length = 4;
   //pwm_msg.data = (float*)malloc(sizeof(float)*4);
-   digitalWrite(LED, LOW);
   nh.initNode();
 
 //  //wait until connected with rosserial before continuing
@@ -93,12 +80,9 @@ void setup() {
   //Setup the wheel velocity PIDs
   setupPIDParams();
 
-  SerialDebug.println("Setup over");
-
 }
 
 void loop() {
-  SerialDebug.println("loop");
   //#################################
   //
   //       Sensor reading loop
