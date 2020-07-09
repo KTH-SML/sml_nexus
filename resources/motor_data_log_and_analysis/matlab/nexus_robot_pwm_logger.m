@@ -1,3 +1,14 @@
+%% ============================= Description ==============================
+% This script logs the velocity obtained when sending different PWM
+% commands to each motor of the robot. It used to get the motor's behavior
+% and write a proper control law.
+%
+% To use it, setup the robot with the proper arduino firmware so that it 
+% can receive PWM commands and broadcast velocity of each wheel over ROS.
+% Running the script will run the robot forward faster and faster until it
+% has logged data all over the PWM duty cycle.
+%% ========================================================================
+
 clear;
 clear global;
 
@@ -42,7 +53,7 @@ send(pwm_pub, pwm_message);
 for i=1:numel(commands)
    fprintf("\nGetting velocity for PWM command: %d", commands(i));
    pwm_message.Data = [commands(i), commands(i), commands(i), commands(i)];
-   log_pwm(i,1) = commands(i)
+   log_pwm(i,1) = commands(i);
    log_pwm(i,1)
    tic;
    while toc<wait_time

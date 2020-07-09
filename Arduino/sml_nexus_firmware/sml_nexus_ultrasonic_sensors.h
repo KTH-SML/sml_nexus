@@ -15,6 +15,9 @@ TO BE USED ON ARDUINO MEGA
 #include "Arduino.h"
 #include <sensor_msgs/Range.h>
 #include <sensor_msgs/Temperature.h>
+#include <std_msgs/Byte.h>
+#include <std_msgs/ByteMultiArray.h>
+#include <std_msgs/String.h>
 
 //Serial port 2 is used communication with sensor
 #define SerialPort Serial2
@@ -26,7 +29,8 @@ byte sensorReadingStep = 0;
 double sensorStepTimer = 0; //ms
 double prevSensorTime  = 0; //ms
 
-byte cmdst[6];
+byte cmdst[10];
+char buff[10];
 
 unsigned int sensorData[8];
 
@@ -49,6 +53,10 @@ sensor_msgs::Temperature rearSensorTempMsg;
 sensor_msgs::Temperature rightSensorTempMsg;
 sensor_msgs::Temperature frontSensorTempMsg;
 
+std_msgs::Byte sensorStepMsg;
+std_msgs::ByteMultiArray sensorCommMsg;
+std_msgs::String sensorStatusMsg;
+
 char leftSensorFrame[] = "sml_nexus_left_sensor";
 char rearSensorFrame[] = "sml_nexus_left_sensor";
 char rightSensorFrame[] = "sml_nexus_left_sensor";
@@ -63,6 +71,9 @@ ros::Publisher leftSensorTempPub("sml_nexus_left_temperature", &leftSensorTempMs
 ros::Publisher rearSensorTempPub("sml_nexus_rear_temperature", &rearSensorTempMsg);
 ros::Publisher rightSensorTempPub("sml_nexus_right_temperature", &rightSensorTempMsg);
 ros::Publisher frontSensorTempPub("sml_nexus_front_temperature", &frontSensorTempMsg);
+//ros::Publisher sensorStepPub("sensor_step", &sensorStepMsg);
+//ros::Publisher sensorStatusPub("sensor_status", &sensorStatusMsg);
+//ros::Publisher sensorCommPub("sensor_serial_comm", &sensorCommMsg);
 
 /******************** Functions ****************/
 void setupSensorTopics();
@@ -114,12 +125,24 @@ void setupSensorTopics(){
   nh.advertise(rearSensorTempPub); 
   nh.advertise(rightSensorTempPub); 
   nh.advertise(frontSensorTempPub); 
+  //nh.advertise(sensorStepPub);
+  //nh.advertise(sensorStatusPub); 
+
+  for(int i = 0 ;i < 10; i++)  cmdst[i] = 0;  //init the URM04 protocol
+  SerialPort.begin(19200);               // Init the RS485 interface
+
+  //sensorCommMsg.data_length = 10;
+  //sensorCommMsg.data = (byte*)malloc(sizeof(byte)*10);
+
+  //nh.advertise(sensorCommPub);
 }
 
 //================================================
 // Main function, to call at every loop iteration
 //================================================
 void runSensor(){
+  //sensorStepMsg.data = sensorReadingStep;
+  //sensorStepPub.publish(&sensorStepMsg);
   if (millis() - prevSensorTime >= sensorStepTimer){
     switch(sensorReadingStep){
       
@@ -127,6 +150,8 @@ void runSensor(){
       // Trigger sensors
       //-----------------
       case 0:
+        //sensorStatusMsg.data = "Trigger";
+        //sensorStatusPub.publish(&sensorStatusMsg);
         //Reset data
         for (int i=0; i<8; i++) sensorData[i] = 65535; //default value is considered erronous and will be treated as such (if no data received from sensor)
         triggerSensor(0);
@@ -141,29 +166,39 @@ void runSensor(){
       //--------------
       // Get distance from left sensor
       case 1:
+        //sensorStatusMsg.data = "Dist sensor 1";
+        //sensorStatusPub.publish(&sensorStatusMsg);
         getDistSensor(0);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
       // Get distance from rear sensor
       case 2:
+        //sensorStatusMsg.data = "Dist sensor 2";
+        //sensorStatusPub.publish(&sensorStatusMsg);
         getDistSensor(1);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
       // Get distance from right sensor
       case 3:
+        //sensorStatusMsg.data = "Dist sensor 3";
+        //sensorStatusPub.publish(&sensorStatusMsg);
         getDistSensor(2);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
       // Get distance from right sensor
       case 4:
+        //sensorStatusMsg.data = "Dist sensor 4";
+        //sensorStatusPub.publish(&sensorStatusMsg);
         getDistSensor(3);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
       case 5:
+        //sensorStatusMsg.data = "Read dist";
+        //sensorStatusPub.publish(&sensorStatusMsg);
         readSensorData();
         sensorStepTimer = 0;
         break;
@@ -173,29 +208,39 @@ void runSensor(){
       //-----------------
       // Get temperature from left sensor
       case 6:
+        //sensorStatusMsg.data = "Temp sensor 1";
+        //sensorStatusPub.publish(&sensorStatusMsg);
         getTempSensor(0);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
       // Get temperature from rear sensor
       case 7:
+        //sensorStatusMsg.data = "Temp sensor 2";
+        //sensorStatusPub.publish(&sensorStatusMsg);
         getTempSensor(1);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
       // Get temperature from right sensor
       case 8:
+        //sensorStatusMsg.data = "Temp sensor 3";
+        //sensorStatusPub.publish(&sensorStatusMsg);
         getTempSensor(2);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
       // Get temperature from right sensor
       case 9:
+        //sensorStatusMsg.data = "Temp sensor 4";
+        //sensorStatusPub.publish(&sensorStatusMsg);
         getTempSensor(3);
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
       case 10:
+        //sensorStatusMsg.data = "Read temp and pub";
+        //sensorStatusPub.publish(&sensorStatusMsg);
         readSensorData();
         sensorStepTimer = 0;
       //------------------------------
@@ -222,28 +267,25 @@ void runSensor(){
 void triggerSensor(int id){  // The function is used to trigger the measuring
   cmdst[0] = sensorTriggerCmd[0];
   cmdst[1] = sensorTriggerCmd[1];
-  cmdst[2] = id;
+  cmdst[2] = sensorAddresses[id];
   cmdst[3] = sensorTriggerCmd[3];
   cmdst[4] = sensorTriggerCmd[4];
-  cmdst[5] = sensorTriggerCmd[5];
   transmitCommands();
 }
 void getDistSensor(int id){  // The function is used to read the distance
   cmdst[0] = sensorDistCmd[0];
   cmdst[1] = sensorDistCmd[1];
-  cmdst[2] = id;
+  cmdst[2] = sensorAddresses[id];
   cmdst[3] = sensorDistCmd[3];
   cmdst[4] = sensorDistCmd[4];
-  cmdst[5] = sensorDistCmd[5];
   transmitCommands();
 }
 void getTempSensor(int id){  // The function is used to read the temperature
   cmdst[0] = sensorTempCmd[0];
   cmdst[1] = sensorTempCmd[1];
-  cmdst[2] = id;
+  cmdst[2] = sensorAddresses[id];
   cmdst[3] = sensorTempCmd[3];
   cmdst[4] = sensorTempCmd[4];
-  cmdst[5] = sensorTempCmd[5];
   transmitCommands();
 }
 
@@ -253,13 +295,14 @@ void transmitCommands(){  // Send protocol via RS485 interface
   for(int j = 0; j < 6; j++){
     printByte(cmdst[j]);
   }
+  delay(3);
 }
 
 /********************* Receive the data and get the distance value from the RS485 interface ***************/
 
 void readSensorData(){
   
-  if(SerialPort.available()){
+  while(SerialPort.available()){
     
     unsigned long timerPoint = millis();
     
@@ -267,8 +310,6 @@ void readSensorData(){
     byte cmdrd[10];
     for(int i = 0 ;i < 10; i++)  cmdrd[i] = 0;
     int i=0;
-    
-    //SerialMonitor.println("OK");
 
     boolean flag = true;
     boolean valid = false;
@@ -316,7 +357,6 @@ void analyzeSensorData(byte cmd[]){
 
   //If message sum check is passed
   if(sumCheck == cmd[7]){
-    
     //Get sensor id
     if(cmd[2] == sensorAddresses[0]){
       id = 0;
@@ -332,7 +372,7 @@ void analyzeSensorData(byte cmd[]){
     }
     //unknown sensor, leave id 255
 
-    if(id == 255){
+    if(id != 255){
       //If distance message
       if(sumCheck == cmd[7] && cmd[3] == 2 && cmd[4] == 2){
         //Get distance value from message
@@ -351,43 +391,51 @@ void analyzeSensorData(byte cmd[]){
 void publishSensorData(){
   //If data from the sensor is available, send message over ROS
   //sensorData array from 0 to 3 is distance
-  if(!sensorData[0] == 65535){
+  if(sensorData[0] != 65535){
+  //if(true){ 
     leftSensorDistMsg.header.stamp = nh.now();
     leftSensorDistMsg.range = sensorData[0];
     leftSensorDistPub.publish(&leftSensorDistMsg);
   }
-  if(!sensorData[1] == 65535){
+  if(sensorData[1] != 65535){
+  //if(true){
     rearSensorDistMsg.header.stamp = nh.now();
     rearSensorDistMsg.range = sensorData[1];
     rearSensorDistPub.publish(&rearSensorDistMsg);
   }
-  if(!sensorData[2] == 65535){
+  if(sensorData[2] != 65535){
+  //if(true){
     rightSensorDistMsg.header.stamp = nh.now();
     rightSensorDistMsg.range = sensorData[2];
     rightSensorDistPub.publish(&rightSensorDistMsg);
   }
-  if(!sensorData[3] == 65535){
+  if(sensorData[3] != 65535){
+  //if(true){
     frontSensorDistMsg.header.stamp = nh.now();
     frontSensorDistMsg.range = sensorData[3];
     frontSensorDistPub.publish(&frontSensorDistMsg);
   }
   //sensorData array from 4 to 7 is temperature
-  if(!sensorData[4] == 65535){
+  if(sensorData[4] != 65535){
+  //if(true){
     leftSensorTempMsg.header.stamp = nh.now();
     leftSensorTempMsg.temperature = sensorData[4];
     leftSensorTempPub.publish(&leftSensorTempMsg);
   }
-  if(!sensorData[5] == 65535){
+  if(sensorData[5] != 65535){
+  //if(true){
     rearSensorTempMsg.header.stamp = nh.now();
     rearSensorTempMsg.temperature = sensorData[5];
     rearSensorTempPub.publish(&rearSensorTempMsg);
   }
-  if(!sensorData[6] == 65535){
+  if(sensorData[6] != 65535){
+  //if(true){
     rightSensorTempMsg.header.stamp = nh.now();
     rightSensorTempMsg.temperature = sensorData[6];
     rightSensorTempPub.publish(&rightSensorTempMsg);
   }
-  if(!sensorData[7] == 65535){
+  if(sensorData[7] != 65535){
+  //if(true){
     frontSensorTempMsg.header.stamp = nh.now();
     frontSensorTempMsg.temperature = sensorData[7];
     frontSensorTempPub.publish(&frontSensorTempMsg);

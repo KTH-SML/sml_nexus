@@ -1,3 +1,8 @@
+#include <ros.h>
+
+/************ ROS Node Handle ************/
+ros::NodeHandle  nh;
+
 #include "sml_nexus_common.h"
 #include "sml_nexus_ultrasonic_sensors.h"
 
@@ -32,42 +37,52 @@ void setup() {
   //Init measured speed message
   meas_msg.data_length = 4;
   meas_msg.data = (float*)malloc(sizeof(float)*4);
-//  output_msg.data_length = 4;
-//  output_msg.data = (float*)malloc(sizeof(float)*4);
-  pwm_msg.data_length = 4;
-  pwm_msg.data = (float*)malloc(sizeof(float)*4);
- 
+  //output_msg.data_length = 4;
+  //output_msg.data = (float*)malloc(sizeof(float)*4);
+  //pwm_msg.data_length = 4;
+  //pwm_msg.data = (float*)malloc(sizeof(float)*4);
   nh.initNode();
 
-  //wait until connected with rosserial before continuing
-  while( !nh.connected() ){
-    nh.spinOnce();
-  }
-
-  //Setup the wheel velocity PIDs
-  setupPIDParams();
+//  //wait until connected with rosserial before continuing
+//  while( !nh.connected() ){
+//    nh.spinOnce();
+//  }
+  delay(1500);
   
+//    //Wait for topics to initialize
+//  int count = 0;
+//  while (count < 100){
+//    nh.spinOnce();
+//    delay(10);
+//    count++;
+//  }
+
   //Advertise common topics over ROS
   setupCommonTopics();
 
   //Setup sensor messages and advertise sensor topics over ROS
   setupSensorTopics();
+  
+//  //Wait for topics to initialize
+//  int count = 0;
+//  while (count < 100){
+//    nh.spinOnce();
+//    delay(10);
+//    count++;
+//  }
 
-  //Wait for topics to initialize
-  int count = 0;
-  while (count < 100){
-    nh.spinOnce();
-    delay(10);
-    count++;
-  }
-
+  //Start adafruit motor shield
+  AFMS.begin();
+  
   prevUpdateTime = 0;
   lastReceivedCommTimeout = - commTimeout; //Ensure timeout at initialization
   
+  //Setup the wheel velocity PIDs
+  setupPIDParams();
+
 }
 
 void loop() {
-
   //#################################
   //
   //       Sensor reading loop
@@ -131,23 +146,23 @@ void loop() {
     // Populate and publish messages
     //===============================
     // Populate messages
-    pwm_msg.data[0] = pwmUL;
-    pwm_msg.data[1] = pwmUR;
-    pwm_msg.data[2] = pwmLL;
-    pwm_msg.data[3] = pwmLR;
-//    output_msg.data[0] = outputPIDUL;
-//    output_msg.data[1] = outputPIDUR;
-//    output_msg.data[2] = outputPIDLL;
-//    output_msg.data[3] = outputPIDLR;
+    //pwm_msg.data[0] = pwmUL;
+    //pwm_msg.data[1] = pwmUR;
+    //pwm_msg.data[2] = pwmLL;
+    //pwm_msg.data[3] = pwmLR;
+    // output_msg.data[0] = polyCmdUL;
+    // output_msg.data[1] = polyCmdUR;
+    // output_msg.data[2] = polyCmdLL;
+    // output_msg.data[3] = polyCmdLR;
     meas_msg.data[0] = measUL;
     meas_msg.data[1] = measUR;
     meas_msg.data[2] = measLL;
     meas_msg.data[3] = measLR;
     // Publish message
-    meas_speed.publish(&meas_msg);
-//    output_pub.publish(&output_msg);
-    pwm_pub.publish(&pwm_msg);
-   
+    measuredVelPub.publish(&meas_msg);
+//    // output_pub.publish(&output_msg);
+//    // pwm_pub.publish(&pwm_msg);
+//
   } 
-    nh.spinOnce();
+  nh.spinOnce();
 }
