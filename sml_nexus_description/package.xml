@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sml_nexus_description</name>
+  <version>0.1.0</version>
+  <description>The description package for the 4-mecanum-wheel-drive holonomic robot of the Smart Mobility Lab of KTH </description>
+
+  <author email="rbaran@kth.se">Robin Baran</author>
+  <maintainer email="rbaran@kth.se">Robin Baran</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>robot_state_publisher</build_depend>
+  <build_depend>urdf</build_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>urdf</exec_depend>
+  <exec_depend>kdl_parser</exec_depend>
+
+</package>
