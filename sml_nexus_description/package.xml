@@ -2,7 +2,7 @@
 <package format="2">
   <name>sml_nexus_description</name>
   <version>0.1.0</version>
-  <description>The description package for the 4-mecanum-wheel-drive holonomic robot of the Smart Mobility Lab of KTH </description>
+  <description>The description package for the 4-mecanum-wheel-drive holonomic robot of KTH Smart Mobility Lab</description>
 
   <author email="rbaran@kth.se">Robin Baran</author>
   <maintainer email="rbaran@kth.se">Robin Baran</maintainer>
