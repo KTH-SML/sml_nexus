@@ -1,6 +1,6 @@
 <launch>   
     <arg name="robot_name" default="nexus_5" />
-    <group ns=$(arg robot_name)>
+    <group ns="$(arg robot_name)">
         <rosparam file="$(find sml_nexus_robot)/config/nexus_pid_params.yaml" command="load" />
         <node name="rosserial_$(arg robot_name)" pkg="rosserial_python" type="serial_node.py" output="screen">
             <param name="port" value="/dev/ttyACM0"/>
