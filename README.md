@@ -19,14 +19,51 @@ To bring up the robot, run the following launch file from the companion computer
 The robot can be commanded in velocity by publishing [ROS Twist message](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Twist.html) on the topic **/nexus_ROBOT_ID/cmd_vel**
 
 ## Receiving feedback
-
+TODO
  
 # Robot description
+The robot is a modified 4 mecanum wheel holonomic robot from Nexus Robotics (https://www.nexusrobot.com/product/4wd-mecanum-wheel-mobile-arduino-robotics-car-10011.html).
 
+## Characteristics
+* **max speed:** 0.6m/s
+* **wheel base:** 300mm
 
-# Package description
+## Actuators
+ * **Motors:** (4x) Faulhaber 12V DC Coreless Motor 16002, with 45° 50mm radius mecanum wheel. 
+ * **Optional manipulator:** Either a **Robotis ViperX 250** or a **Robotis WidowX** depending on the platform.
 
+## Controllers
+ * **Onboard computer:** Either **NVidia TX2**, **NVidia Jetson Nano** or **Intel NUC** depending on the platform.
+ * **Low-level controller:** Arduino Mega for interfacing with motor drivers, ultrasonic range sensor and encoders.
+ * **Motor drivers:** Two Cytron MDD3A motor drivers.
+ 
+## Sensors
+* **(4x) Encoders:** Encoder on each wheel with a resolution of 12CPR before motor gearbox and 768CPR after gearbox.
+* **(4x) Ultrasonic range sensor:** URM04 v1.0 ultrasonic range sensors with RS-485 interface.
+
+# ROS package description
+Packages:
+* **sml_nexus_description**
+* **sml_nexus_robot**
+
+## sml_nexus_description
+Contains the robot URDF description and meshes.
+
+### Launch files
+* **sml_nexus_description.launch:** Load the SML nexus 4WD mecanum robot description parameter and the robot state publisher.
+
+* **sml_nexus_rviz.launch:** Load the SML nexus 4WD mecanum robot description parameter and a RViz session.
+
+## sml_nexus_robot
+Package to be run from the robot onboard computer.
+### Launch files
+* **sml_nexus_bringup.launch:** Load config files and connect to the low-level controller using rosserial.
+
+### Config files
+* **nexus_pid_params.yaml** Parameters of the motor controllers
 
 # Setting up a new robot
 ### Hardeware
+TODO
 ### Software
+TODO
