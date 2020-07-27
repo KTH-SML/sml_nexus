@@ -14,11 +14,9 @@ TO BE USED ON ARDUINO MEGA
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <PID_v1.h>
+#include "sml_nexus_motor.h"
 
 /******************** Variables ****************/
-
-// Create the motor shield object with the default I2C address
-Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
 
 unsigned long prevUpdateTime;
 double long updateOldness;
@@ -28,25 +26,29 @@ double long now;
 int intCount1 = 0;
 #define MOTOR1_ENC_A 3
 #define MOTOR1_ENC_B 13
-Adafruit_DCMotor *URMotor = AFMS.getMotor(1);
+nexusMotor URMotor(8, 9);
+//Adafruit_DCMotor *URMotor = AFMS.getMotor(1);
 
 //LR wheel motor
 int intCount2 = 0;
 #define MOTOR2_ENC_A 19
 #define MOTOR2_ENC_B A12
-Adafruit_DCMotor *LRMotor = AFMS.getMotor(2);
+//Adafruit_DCMotor *LRMotor = AFMS.getMotor(2);
+nexusMotor LRMotor(10, 11);
 
 //LL wheel motor
 int intCount3 = 0;
 #define MOTOR3_ENC_A 18
 #define MOTOR3_ENC_B A14
-Adafruit_DCMotor *LLMotor = AFMS.getMotor(3);
+//Adafruit_DCMotor *LLMotor = AFMS.getMotor(3);
+nexusMotor LLMotor(5, 4);
 
 //UL wheel motor
 int intCount4 = 0;
 #define MOTOR4_ENC_A 2
 #define MOTOR4_ENC_B 12
-Adafruit_DCMotor *ULMotor = AFMS.getMotor(4);
+//Adafruit_DCMotor *ULMotor = AFMS.getMotor(4);
+nexusMotor ULMotor(6, 7);
 
 double outputPIDUL = 0;
 double outputPIDUR = 0;
@@ -402,24 +404,11 @@ void computeMotorInputs(){
 
 /************ Apply previously computed motor command  ************/
 void applyMotorInputs(){
-  //Set motor direction
-  if (pwmUL>0) ULMotor->run(BACKWARD);
-  else if (pwmUL<0) ULMotor->run(FORWARD);
-  else ULMotor->run(RELEASE);
-  if (pwmUR>0) URMotor->run(BACKWARD);
-  else if (pwmUR<0) URMotor->run(FORWARD);
-  else URMotor->run(RELEASE);
-  if (pwmLL>0) LLMotor->run(BACKWARD);
-  else if (pwmLL<0) LLMotor->run(FORWARD);
-  else LLMotor->run(RELEASE);
-  if (pwmLR>0) LRMotor->run(BACKWARD);
-  else if (pwmLR<0) LRMotor->run(FORWARD);
-  else LRMotor->run(RELEASE);
   //Set motor speeds
-  LRMotor->setSpeed(abs(pwmLR));
-  LLMotor->setSpeed(abs(pwmLL));
-  ULMotor->setSpeed(abs(pwmUL));
-  URMotor->setSpeed(abs(pwmUR));
+  LRMotor.setSpeed(pwmLR);
+  LLMotor.setSpeed(pwmLL);
+  ULMotor.setSpeed(pwmUL);
+  URMotor.setSpeed(pwmUR);
 }
 
 

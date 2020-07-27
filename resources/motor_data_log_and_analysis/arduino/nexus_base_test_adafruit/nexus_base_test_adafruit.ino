@@ -3,12 +3,10 @@
 #include <std_msgs/Float32MultiArray.h>
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
+#include "sml_nexus_motor.h"
 
 // Var definition
-// Create the motor shield object with the default I2C address
-Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
 
-#define INTEGRATION_WINDOW 20
 
 unsigned long prevUpdateTime;
 
@@ -16,25 +14,29 @@ unsigned long prevUpdateTime;
 int intCount1 = 0;
 #define MOTOR1_ENC_A 3
 #define MOTOR1_ENC_B 13
-Adafruit_DCMotor *URMotor = AFMS.getMotor(1);
+nexusMotor URMotor(8, 9);
+//Adafruit_DCMotor *URMotor = AFMS.getMotor(1);
 
 //LR wheel motor
 int intCount2 = 0;
 #define MOTOR2_ENC_A 19
 #define MOTOR2_ENC_B A12
-Adafruit_DCMotor *LRMotor = AFMS.getMotor(2);
+//Adafruit_DCMotor *LRMotor = AFMS.getMotor(2);
+nexusMotor LRMotor(10, 11);
 
 //LL wheel motor
 int intCount3 = 0;
 #define MOTOR3_ENC_A 18
 #define MOTOR3_ENC_B A14
-Adafruit_DCMotor *LLMotor = AFMS.getMotor(3);
+//Adafruit_DCMotor *LLMotor = AFMS.getMotor(3);
+nexusMotor LLMotor(5, 4);
 
 //UL wheel motor
 int intCount4 = 0;
 #define MOTOR4_ENC_A 2
 #define MOTOR4_ENC_B 12
-Adafruit_DCMotor *ULMotor = AFMS.getMotor(4);
+//Adafruit_DCMotor *ULMotor = AFMS.getMotor(4);
+nexusMotor ULMotor(6, 7);
 
 
 ros::NodeHandle nh;
@@ -90,6 +92,10 @@ ros::Subscriber<std_msgs::Float32MultiArray> pwm_sub("cmd_pwm", &pwmSubCb );
 
 void setup() {
   // put your setup code here, to run once:
+  TCCR2B = TCCR2B & B11111000 | B00000001;    // set timer 2 divisor to     1 for PWM frequency of 31372.55 Hz
+  TCCR4B = TCCR4B & B11111000 | B00000001;
+  TCCR3B = TCCR3B & B11111000 | B00000001;    // set timer 3 divisor to     1 for PWM frequency of 31372.55 Hz
+  
   vx = 0;
   vy = 0;
   w = 0;
@@ -124,9 +130,6 @@ void setup() {
   nh.subscribe(pwm_sub);
   nh.advertise(meas_speed);
 
-  //Start adafruit motor shield
-  AFMS.begin();
-
   prevUpdateTime = 0;
 }
 
@@ -150,23 +153,10 @@ void loop() {
     intCount2 = 0;
 
     //Set motor speeds
-    if (pwmUL>0) ULMotor->run(FORWARD);
-    else if (pwmUL<0) ULMotor->run(BACKWARD);
-    else ULMotor->run(RELEASE);
-    if (pwmUR>0) URMotor->run(FORWARD);
-    else if (pwmUR<0) URMotor->run(BACKWARD);
-    else URMotor->run(RELEASE);
-    if (pwmLL>0) LLMotor->run(FORWARD);
-    else if (pwmLL<0) LLMotor->run(BACKWARD);
-    else LLMotor->run(RELEASE);
-    if (pwmLR>0) LRMotor->run(FORWARD);
-    else if (pwmLR<0) LRMotor->run(BACKWARD);
-    else LRMotor->run(RELEASE);
-    
-    LRMotor->setSpeed(abs(pwmLR));
-    LLMotor->setSpeed(abs(pwmLL));
-    ULMotor->setSpeed(abs(pwmUL));
-    URMotor->setSpeed(abs(pwmUR));
+    LRMotor.setSpeed(pwmLR);
+    LLMotor.setSpeed(pwmLL);
+    ULMotor.setSpeed(pwmUL);
+    URMotor.setSpeed(pwmUR);
 
     // reset vars
     prevUpdateTime = now;  

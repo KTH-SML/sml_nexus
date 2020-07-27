@@ -7,6 +7,11 @@ ros::NodeHandle  nh;
 #include "sml_nexus_ultrasonic_sensors.h"
 
 void setup() {
+  TCCR1B = TCCR1B & B11111000 | B00000001;    // set timer 1 divisor to     1 for PWM frequency of 31372.55 Hz
+  TCCR2B = TCCR2B & B11111000 | B00000001;    // set timer 2 divisor to     1 for PWM frequency of 31372.55 Hz
+  TCCR3B = TCCR3B & B11111000 | B00000001;    // set timer 3 divisor to     1 for PWM frequency of 31372.55 Hz
+  TCCR4B = TCCR4B & B11111000 | B00000001;    // set timer 4 divisor to     1 for PWM frequency of 31372.55 Hz
+  
   vx = 0;
   vy = 0;
   w = 0;
@@ -71,8 +76,6 @@ void setup() {
 //    count++;
 //  }
 
-  //Start adafruit motor shield
-  AFMS.begin();
   
   prevUpdateTime = 0;
   lastReceivedCommTimeout = - commTimeout; //Ensure timeout at initialization
