@@ -55,8 +55,9 @@ float control_signal;
 
 double measUL, measUR, measLL, measLR;
 
-double L1 = 150;
-double L2 = 150;
+double L1 = 0.15; //distance between upper wheels, in m
+double L2 = 0.15; //distance between upper and lower wheel axles, in m
+double wheelbase_radius = sqrt(sq(L1)+sq(L2));
 
 double long lastReceivedCommTimeout;
 double long commTimeout = 500; // ms
@@ -298,10 +299,10 @@ void computeWheelVelCmd(){
   //===================================
   // Map vx, vy, w to each wheel speed 
   //===================================
-  ULspeed = constrain(1*vx - 1*vy - sqrt(sq(L1)+sq(L2))*w, -max_speed, max_speed);
-  URspeed = constrain(1*vx + 1*vy + sqrt(sq(L1)+sq(L2))*w, -max_speed, max_speed);
-  LLspeed = constrain(1*vx + 1*vy - sqrt(sq(L1)+sq(L2))*w, -max_speed, max_speed);
-  LRspeed = constrain(1*vx - 1*vy + sqrt(sq(L1)+sq(L2))*w, -max_speed, max_speed);
+  ULspeed = constrain(1*vx - 1*vy - wheelbase_radius*w, -max_speed, max_speed);
+  URspeed = constrain(1*vx + 1*vy + wheelbase_radius*w, -max_speed, max_speed);
+  LLspeed = constrain(1*vx + 1*vy - wheelbase_radius*w, -max_speed, max_speed);
+  LRspeed = constrain(1*vx - 1*vy + wheelbase_radius*w, -max_speed, max_speed);
 }
 
 
