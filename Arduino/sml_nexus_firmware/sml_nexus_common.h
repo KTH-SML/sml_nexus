@@ -336,8 +336,9 @@ void computeMotorInputs(){
     // Compute feedforward polynomial command
     polyCmdUL = 0;
     for(int i=0; i<5; i++){
-      polyCmdUL += feedForwardPolyUL[i]*pow((float)ULspeed,i);
+      polyCmdUL += feedForwardPolyUL[i]*pow((float)abs(ULspeed),i);
     }
+    if (ULspeed < 0) polyCmdUL = -polyCmdUL;
     // Compute PID output
     PID_UL.Compute();
     pwmUL = (int)polyCmdUL + (int)outputPIDUL;
@@ -351,8 +352,9 @@ void computeMotorInputs(){
     // Compute feedforward polynomial command
     polyCmdUR = 0;
     for(int i=0; i<5; i++){
-      polyCmdUR += feedForwardPolyUR[i]*pow((float)URspeed,i);
+      polyCmdUR += feedForwardPolyUR[i]*pow((float)abs(URspeed),i);
     }
+    if (URspeed < 0) polyCmdUR = -polyCmdUR;
     // Compute PID output
     PID_UR.Compute();
     pwmUR = (int)polyCmdUR + (int)outputPIDUR;
@@ -366,8 +368,9 @@ void computeMotorInputs(){
     // Compute feedforward polynomial command
     polyCmdLL = 0;
     for(int i=0; i<5; i++){
-      polyCmdLL += feedForwardPolyLL[i]*pow((float)LLspeed,i);
+      polyCmdLL += feedForwardPolyLL[i]*pow((float)abs(LLspeed),i);
     }
+    if (LLspeed < 0) polyCmdLL = -polyCmdLL;
     // Compute PID output
     PID_LL.Compute();
     pwmLL = (int)polyCmdLL + (int)outputPIDLL;
@@ -381,8 +384,9 @@ void computeMotorInputs(){
     // Compute feedforward polynomial command
     polyCmdLR = 0;
     for(int i=0; i<5; i++){
-      polyCmdLR += feedForwardPolyLR[i]*pow((float)LRspeed,i);
+      polyCmdLR += feedForwardPolyLR[i]*pow((float)abs(LRspeed),i);
     }
+    if (LRspeed < 0) polyCmdLR = -polyCmdLR;
     // Compute PID output
     PID_LR.Compute();
     pwmLR = (int)polyCmdLR + (int)outputPIDLR;
