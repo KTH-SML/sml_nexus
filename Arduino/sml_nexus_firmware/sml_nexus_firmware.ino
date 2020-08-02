@@ -1,5 +1,37 @@
 #include <ros.h>
 
+/*
+************************************************************************************
+                        // FORWARD DIRECTION //
+                        
+                               Sonar:0x12
+                                _     _
+                        -------|-|---|-|------- 
+                ||\\|| |                       | ||//||
+   UL: Motor 2  ||\\||=|                       |=||//||  UR: Motor 3
+                ||\\||=|                       |=||//||
+                ||\\|| |                       | ||//||
+                       |                       |
+                       |                       |
+          Sonar:0x11 [-|                       |-]  Sonar:0x12
+                     [-|                       |-]
+                       |                       |
+                       |                       |
+                       |                       |] Power Switch
+                       |                       |
+                        =======================
+                ||//|| |                       | ||\\||
+   LL: Motor 1  ||//||=|                       |=||\\||  LR: Motor 4
+                ||//||=|                       |=||\\||
+                ||//||  -------|-|---|-|-------  ||\\||
+                                ‾     ‾ 
+                              Sonar:0x14
+
+                       // BACKWARD DIRECTION //
+************************************************************************************
+*/
+
+
 /************ ROS Node Handle ************/
 ros::NodeHandle  nh;
 
@@ -7,10 +39,11 @@ ros::NodeHandle  nh;
 #include "sml_nexus_ultrasonic_sensors.h"
 
 void setup() {
-  TCCR1B = TCCR1B & B11111000 | B00000001;    // set timer 1 divisor to     1 for PWM frequency of 31372.55 Hz
-  TCCR2B = TCCR2B & B11111000 | B00000001;    // set timer 2 divisor to     1 for PWM frequency of 31372.55 Hz
-  TCCR3B = TCCR3B & B11111000 | B00000001;    // set timer 3 divisor to     1 for PWM frequency of 31372.55 Hz
-  TCCR4B = TCCR4B & B11111000 | B00000001;    // set timer 4 divisor to     1 for PWM frequency of 31372.55 Hz
+  TCCR1B = TCCR1B & B11111000 | B00000001;    // set PWM frequency of 31372.55 Hz for D11 & D12
+  TCCR2B = TCCR2B & B11111000 | B00000001;    // set PWM frequency of 31372.55 Hz for D9 & D10
+  TCCR3B = TCCR3B & B11111000 | B00000001;    // set PWM frequency of 31372.55 Hz for D2, D3 & D5
+  TCCR4B = TCCR4B & B11111000 | B00000001;    // set PWM frequency of 31372.55 Hz for D6, D7 & D8
+  TCCR5B = TCCR5B & B11111000 | B00000001;    // set PWM frequency of 31372.55 Hz for D44, D45 & D46
   
   vx = 0;
   vy = 0;
@@ -31,10 +64,10 @@ void setup() {
   pinMode(MOTOR4_ENC_A, INPUT);
   pinMode(MOTOR4_ENC_B, INPUT);
   
-  attachInterrupt(digitalPinToInterrupt(MOTOR1_ENC_A), encoderM1A, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(MOTOR2_ENC_A), encoderM2A, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(MOTOR3_ENC_A), encoderM3A, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(MOTOR4_ENC_A), encoderM4A, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(MOTOR1_ENC_A), encoderLL, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(MOTOR2_ENC_A), encoderUL, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(MOTOR3_ENC_A), encoderUR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(MOTOR4_ENC_A), encoderLR, CHANGE);
 
   //-----------------------------------------
   // Start ROS node, publishers & subscribers

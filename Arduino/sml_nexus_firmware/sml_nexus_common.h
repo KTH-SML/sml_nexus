@@ -23,32 +23,28 @@ double long updateOldness;
 double long now;
 
 //UR wheel motor
-int intCount1 = 0;
-#define MOTOR1_ENC_A 3
-#define MOTOR1_ENC_B 13
-nexusMotor URMotor(8, 9);
-//Adafruit_DCMotor *URMotor = AFMS.getMotor(1);
-
-//LR wheel motor
-int intCount2 = 0;
-#define MOTOR2_ENC_A 19
-#define MOTOR2_ENC_B A12
-//Adafruit_DCMotor *LRMotor = AFMS.getMotor(2);
-nexusMotor LRMotor(10, 11);
-
-//LL wheel motor
 int intCount3 = 0;
 #define MOTOR3_ENC_A 18
 #define MOTOR3_ENC_B A14
-//Adafruit_DCMotor *LLMotor = AFMS.getMotor(3);
-nexusMotor LLMotor(5, 4);
+nexusMotor URMotor(8, 9);
 
-//UL wheel motor
+//LR wheel motor
 int intCount4 = 0;
 #define MOTOR4_ENC_A 2
 #define MOTOR4_ENC_B 12
-//Adafruit_DCMotor *ULMotor = AFMS.getMotor(4);
-nexusMotor ULMotor(6, 7);
+nexusMotor LRMotor(10, 11);
+
+//LL wheel motor
+int intCount1 = 0;
+#define MOTOR1_ENC_A 3
+#define MOTOR1_ENC_B 13
+nexusMotor LLMotor(5, 44);
+
+//UL wheel motor
+int intCount2 = 0;
+#define MOTOR2_ENC_A 19
+#define MOTOR2_ENC_B A12
+nexusMotor ULMotor(7, 6);
 
 double outputPIDUL = 0;
 double outputPIDUR = 0;
@@ -103,17 +99,17 @@ double min_speed = 0.005; //minimum that will stop the motor command if reached,
 // PID Parameters, respectively Kp, Ki and Kd
 float PID_default_params[] = { 5.0, 0.0, 0.0 };
 // Feedforward default gain
-float feedForwardPolyDefault[] = { 4, 270, 4900, -23000, 40000, -23000};
+float feedForwardPolyDefault[] = { 21, 115, 1200, -2000, 1200 };
 
 float PID_UL_params[3];
 float PID_UR_params[3];
 float PID_LL_params[3];
 float PID_LR_params[3];
 
-float feedForwardPolyUL[6];
-float feedForwardPolyUR[6];
-float feedForwardPolyLL[6];
-float feedForwardPolyLR[6];
+float feedForwardPolyUL[5];
+float feedForwardPolyUR[5];
+float feedForwardPolyLL[5];
+float feedForwardPolyLR[5];
 
 //PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, Direction) 
 PID PID_UL(&measUL, &outputPIDUL, &ULspeed, PID_default_params[0], PID_default_params[1], PID_default_params[2], DIRECT);
@@ -173,7 +169,7 @@ static inline int8_t sgn(int val) {
 //------------------------------------
 // Setup ROS publishers & subscribers
 //------------------------------------
-ros::Subscriber<geometry_msgs::Twist> cmd_sub("cmdvel", &messageCb );
+ros::Subscriber<geometry_msgs::Twist> cmd_sub("cmd_vel", &messageCb );
 //ros::Subscriber<std_msgs :: Float32MultiArray> pid_sub("pid_tuning", &pidCb );
 std_msgs :: Float32MultiArray meas_msg;
 ros::Publisher measuredVelPub("velocity", &meas_msg);
@@ -204,13 +200,12 @@ void setupPIDParams(){
     nh.logwarn("UL motor PID: loading default values;");
   }
 
-  if(!nh.getParam("feedforward_UL", feedForwardPolyUL, 6, 300)){
+  if(!nh.getParam("feedforward_UL", feedForwardPolyUL, 5, 300)){
     feedForwardPolyUL[0] = feedForwardPolyDefault[0];
     feedForwardPolyUL[1] = feedForwardPolyDefault[1];
     feedForwardPolyUL[2] = feedForwardPolyDefault[2];
     feedForwardPolyUL[3] = feedForwardPolyDefault[3];
     feedForwardPolyUL[4] = feedForwardPolyDefault[4];
-    feedForwardPolyUL[5] = feedForwardPolyDefault[5];
     nh.logwarn("UL motor feedforward gain: loading default values;");
   }
 
@@ -221,13 +216,12 @@ void setupPIDParams(){
     nh.logwarn("UR motor PID: loading default values;");
   }
 
-  if(!nh.getParam("feedforward_UR", feedForwardPolyUR, 6, 300)){
+  if(!nh.getParam("feedforward_UR", feedForwardPolyUR, 5, 300)){
     feedForwardPolyUR[0] = feedForwardPolyDefault[0];
     feedForwardPolyUR[1] = feedForwardPolyDefault[1];
     feedForwardPolyUR[2] = feedForwardPolyDefault[2];
     feedForwardPolyUR[3] = feedForwardPolyDefault[3];
     feedForwardPolyUR[4] = feedForwardPolyDefault[4];
-    feedForwardPolyUR[5] = feedForwardPolyDefault[5];
     nh.logwarn("UR motor feedforward gain: loading default values;");
   }
 
@@ -238,13 +232,12 @@ void setupPIDParams(){
     nh.logwarn("LL motor PID: loading default values;");
   }
 
-  if(!nh.getParam("feedforward_LL", feedForwardPolyLL, 6, 300)){
+  if(!nh.getParam("feedforward_LL", feedForwardPolyLL, 5, 300)){
     feedForwardPolyLL[0] = feedForwardPolyDefault[0];
     feedForwardPolyLL[1] = feedForwardPolyDefault[1];
     feedForwardPolyLL[2] = feedForwardPolyDefault[2];
     feedForwardPolyLL[3] = feedForwardPolyDefault[3];
     feedForwardPolyLL[4] = feedForwardPolyDefault[4];
-    feedForwardPolyLL[5] = feedForwardPolyDefault[5];
     nh.logwarn("LL motor feedforward gain: loading default values;");
   }
   if(!nh.getParam("PID_LR", PID_LR_params, 3, 300)){
@@ -254,13 +247,12 @@ void setupPIDParams(){
     nh.logwarn("LR motor PID: loading default values;");
   }
 
-  if(!nh.getParam("feedforward_LR", feedForwardPolyLR, 6, 300)){
+  if(!nh.getParam("feedforward_LR", feedForwardPolyLR, 5, 300)){
     feedForwardPolyLR[0] = feedForwardPolyDefault[0];
     feedForwardPolyLR[1] = feedForwardPolyDefault[1];
     feedForwardPolyLR[2] = feedForwardPolyDefault[2];
     feedForwardPolyLR[3] = feedForwardPolyDefault[3];
     feedForwardPolyLR[4] = feedForwardPolyDefault[4];
-    feedForwardPolyLR[5] = feedForwardPolyDefault[5];
     nh.logwarn("LR motor feedforward gain: loading default values;");
   }
     
@@ -317,13 +309,13 @@ void computeWheelVelCmd(){
 /************ Get wheel velocities from encoders  ************/
 void getWheelVel(){
   //Compute speed:  Get rads from tick increments       convert to rad/s      |v=wr| convert to m/s
-  measLR = ((double)intCount3/1536)*(2*3.1415) * ((double)1000/updateOldness) * wheel_radius;
+  measUR = ((float)intCount3/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
   intCount3 = 0;
-  measUR = ((float)intCount4/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
+  measLR = ((float)intCount4/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
   intCount4 = 0;
-  measUL = ((float)intCount1/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
+  measLL = ((float)intCount1/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
   intCount1 = 0;
-  measLL = ((float)intCount2/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
+  measUL = ((float)intCount2/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
   intCount2 = 0;
 }
 
@@ -343,7 +335,7 @@ void computeMotorInputs(){
   if (abs(ULspeed) > min_speed){
     // Compute feedforward polynomial command
     polyCmdUL = 0;
-    for(int i=0; i<6; i++){
+    for(int i=0; i<5; i++){
       polyCmdUL += feedForwardPolyUL[i]*pow((float)ULspeed,i);
     }
     // Compute PID output
@@ -358,7 +350,7 @@ void computeMotorInputs(){
   if (abs(URspeed) > min_speed){
     // Compute feedforward polynomial command
     polyCmdUR = 0;
-    for(int i=0; i<6; i++){
+    for(int i=0; i<5; i++){
       polyCmdUR += feedForwardPolyUR[i]*pow((float)URspeed,i);
     }
     // Compute PID output
@@ -373,7 +365,7 @@ void computeMotorInputs(){
   if (abs(LLspeed) > min_speed){
     // Compute feedforward polynomial command
     polyCmdLL = 0;
-    for(int i=0; i<6; i++){
+    for(int i=0; i<5; i++){
       polyCmdLL += feedForwardPolyLL[i]*pow((float)LLspeed,i);
     }
     // Compute PID output
@@ -388,7 +380,7 @@ void computeMotorInputs(){
   if (abs(LRspeed) > min_speed){
     // Compute feedforward polynomial command
     polyCmdLR = 0;
-    for(int i=0; i<6; i++){
+    for(int i=0; i<5; i++){
       polyCmdLR += feedForwardPolyLR[i]*pow((float)LRspeed,i);
     }
     // Compute PID output
@@ -414,22 +406,22 @@ void applyMotorInputs(){
 
 
 /************ Encoders interrupt functions ************/
-void encoderM1A(){
-  if (digitalRead(MOTOR1_ENC_A) == digitalRead(MOTOR1_ENC_B)) ++intCount1;
-  else --intCount1;
+void encoderLL(){
+  if (digitalRead(MOTOR1_ENC_A) == digitalRead(MOTOR1_ENC_B)) --intCount1;
+  else ++intCount1;
 }
 
-void encoderM2A(){
-  if (digitalRead(MOTOR2_ENC_A) == digitalRead(MOTOR2_ENC_B)) ++intCount2;
-  else --intCount2;
+void encoderUL(){
+  if (digitalRead(MOTOR2_ENC_A) == digitalRead(MOTOR2_ENC_B)) --intCount2;
+  else ++intCount2;
 }
 
-void encoderM3A(){
-  if (digitalRead(MOTOR3_ENC_A) == digitalRead(MOTOR3_ENC_B)) --intCount3;
-  else ++intCount3;
+void encoderUR(){
+  if (digitalRead(MOTOR3_ENC_A) == digitalRead(MOTOR3_ENC_B)) ++intCount3;
+  else --intCount3;
 }
 
-void encoderM4A(){
-  if (digitalRead(MOTOR4_ENC_A) == digitalRead(MOTOR4_ENC_B)) --intCount4;
-  else ++intCount4;
+void encoderLR(){
+  if (digitalRead(MOTOR4_ENC_A) == digitalRead(MOTOR4_ENC_B)) ++intCount4;
+  else --intCount4;
 }
