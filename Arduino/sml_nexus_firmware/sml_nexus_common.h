@@ -92,7 +92,7 @@ const float wheel_radius = 0.05;  //Wheel radius (in m)
 const double speed_to_pwm_ratio = 120;     //Ratio to convert speed (in m/s) to PWM value. It was obtained by plotting the wheel speed in relation to the PWM motor command.
 
 double max_speed = 0.5; //max speed per wheel in m/s
-double min_speed = 0.005; //minimum that will stop the motor command if reached, in m/s
+double min_speed = 0.008; //minimum that will stop the motor command if reached, in m/s
 
 //-----------------------------------
 // Setup a PID object for each wheel
@@ -101,6 +101,11 @@ double min_speed = 0.005; //minimum that will stop the motor command if reached,
 float PID_default_params[] = { 5.0, 0.0, 0.0 };
 // Feedforward default gain
 float feedForwardPolyDefault[] = { 21, 115, 1200, -2000, 1200 };
+
+int min_cmd_UL = 0;
+int min_cmd_UR = 0;
+int min_cmd_LL = 0;
+int min_cmd_LR = 0;
 
 float PID_UL_params[3];
 float PID_UR_params[3];
@@ -256,6 +261,19 @@ void setupPIDParams(){
     feedForwardPolyLR[4] = feedForwardPolyDefault[4];
     nh.logwarn("LR motor feedforward gain: loading default values;");
   }
+
+  if(!nh.getParam("min_cmd_UL", &min_cmd_UL)){
+    nh.logwarn("UL motor minimum PWM cmd: loading default values;");
+  }
+  if(!nh.getParam("min_cmd_UR", &min_cmd_UR)){
+    nh.logwarn("UR motor minimum PWM cmd: loading default values;");
+  }
+  if(!nh.getParam("min_cmd_LL", &min_cmd_LL)){
+    nh.logwarn("LL motor minimum PWM cmd: loading default values;");
+  }
+  if(!nh.getParam("min_cmd_LR", &min_cmd_LR)){
+    nh.logwarn("LR motor minimum PWM cmd: loading default values;");
+  }
     
   //------------------------
   // Setting PID parameters
@@ -344,8 +362,8 @@ void computeMotorInputs(){
     PID_UL.Compute();
     pwmUL = (int)polyCmdUL + (int)outputPIDUL;
     // Constrain to minimum PWM command
-    //if (ULspeed > 0) pwmUL = constrain( pwmUL, 10, 200 );
-    //else             pwmUL = constrain( pwmUL, -200, -10 );
+    if (ULspeed > 0) pwmUL = constrain( pwmUL, min_cmd_UL, 245 );
+    else             pwmUL = constrain( pwmUL, -245, -min_cmd_UL );
   }
   //--------
   //For UR wheel motor
@@ -360,8 +378,8 @@ void computeMotorInputs(){
     PID_UR.Compute();
     pwmUR = (int)polyCmdUR + (int)outputPIDUR;
     // Constrain to minimum PWM command
-    //if (URspeed > 0) pwmUR = constrain( pwmUR, 10, 200 );
-    //else             pwmUR = constrain( pwmUR, -200, -10 );
+    if (URspeed > 0) pwmUR = constrain( pwmUR, min_cmd_UR, 245 );
+    else             pwmUR = constrain( pwmUR, -245, -min_cmd_UR );
   }
   //---------
   //For LL wheel motor
@@ -376,8 +394,8 @@ void computeMotorInputs(){
     PID_LL.Compute();
     pwmLL = (int)polyCmdLL + (int)outputPIDLL;
     // Constrain to minimum PWM command
-    //if (LLspeed > 0) pwmLL = constrain( pwmLL, 10, 200 );
-    //else             pwmLL = constrain( pwmLL, -200, -10 );
+    if (LLspeed > 0) pwmLL = constrain( pwmLL, min_cmd_LL, 245 );
+    else             pwmLL = constrain( pwmLL, -245, -min_cmd_LL );
   }
   //---------
   //For LR wheel motor
@@ -392,8 +410,8 @@ void computeMotorInputs(){
     PID_LR.Compute();
     pwmLR = (int)polyCmdLR + (int)outputPIDLR;
     // Constrain to minimum PWM command
-    //if (LRspeed > 0) pwmLR = constrain( pwmLR, 10, 200 );
-    //else             pwmLR = constrain( pwmLR, -200, -10 );
+    if (LRspeed > 0) pwmLR = constrain( pwmLR, min_cmd_LR, 245 );
+    else             pwmLR = constrain( pwmLR, -245, -min_cmd_LR );
   }       
 }
 
