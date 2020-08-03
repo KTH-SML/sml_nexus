@@ -57,7 +57,6 @@ double measUL, measUR, measLL, measLR;
 
 double L1 = 0.15; //distance between upper wheels, in m
 double L2 = 0.15; //distance between upper and lower wheel axles, in m
-double wheelbase_radius = sqrt(sq(L1)+sq(L2));
 
 double long lastReceivedCommTimeout;
 double long commTimeout = 500; // ms
@@ -178,7 +177,7 @@ static inline int8_t sgn(int val) {
 ros::Subscriber<geometry_msgs::Twist> cmd_sub("cmd_vel", &messageCb );
 //ros::Subscriber<std_msgs :: Float32MultiArray> pid_sub("pid_tuning", &pidCb );
 std_msgs :: Float32MultiArray meas_msg;
-ros::Publisher measuredVelPub("velocity", &meas_msg);
+ros::Publisher measuredVelPub("wheel_velocity", &meas_msg);
 //std_msgs :: Float32MultiArray output_msg;
 //std_msgs :: Float32MultiArray pwm_msg;
 //ros::Publisher output_pub("output", &output_msg);
@@ -317,10 +316,10 @@ void computeWheelVelCmd(){
   //===================================
   // Map vx, vy, w to each wheel speed 
   //===================================
-  ULspeed = constrain(1*vx - 1*vy - wheelbase_radius*w, -max_speed, max_speed);
-  URspeed = constrain(1*vx + 1*vy + wheelbase_radius*w, -max_speed, max_speed);
-  LLspeed = constrain(1*vx + 1*vy - wheelbase_radius*w, -max_speed, max_speed);
-  LRspeed = constrain(1*vx - 1*vy + wheelbase_radius*w, -max_speed, max_speed);
+  ULspeed = constrain(1*vx - 1*vy - (L1+L2)*w, -max_speed, max_speed);
+  URspeed = constrain(1*vx + 1*vy + (L1+L2)*w, -max_speed, max_speed);
+  LLspeed = constrain(1*vx + 1*vy - (L1+L2)*w, -max_speed, max_speed);
+  LRspeed = constrain(1*vx - 1*vy + (L1+L2)*w, -max_speed, max_speed);
 }
 
 
