@@ -213,22 +213,35 @@ nav_msgs::Odometry SmlNexusOdometryBroadcaster::computeRelativeMotion(const floa
         const double distX = vel.linear.x * timeSeconds;
         const double distY = vel.linear.y * timeSeconds;
         const double distChange = std::sqrt(distX * distX + distY * distY);
-        const double angleDriveDirection = std::acos(distX / distChange);
         angleChange = vel.angular.z * timeSeconds;
 
-        const double arcRadius = distChange / angleChange;
 
-        tf::Vector3 endPos = tf::Vector3(std::sin(angleChange) * arcRadius,
-                                        arcRadius - std::cos(angleChange) * arcRadius,
-                                        0.0);
+        if (distChange == 0){
+            //Rotating on place
+            odom.pose.pose.position.x = 0.0;
+            odom.pose.pose.position.y = 0.0;
+            odom.pose.pose.position.z = 0.0;
+        }
+        else{
+            const double angleDriveDirection = std::acos(distX / distChange);
 
-        endPos = endPos.rotate(tf::Vector3(0.0, 0.0, 1.0), angleDriveDirection);
+            const double arcRadius = distChange / angleChange;
 
-        odom.pose.pose.position.x = endPos[0];
-        odom.pose.pose.position.y = endPos[1];
-        odom.pose.pose.position.z = 0.0;
+            ROS_INFO_STREAM("arcRadius: " << arcRadius << std::endl);
+            ROS_INFO_STREAM("angleChange: " << angleChange << std::endl);
+            ROS_INFO_STREAM("distChange: " << distChange << std::endl);
+            ROS_INFO_STREAM("angleDriveDirection: " << angleDriveDirection << std::endl);
 
-        
+            tf::Vector3 endPos = tf::Vector3(std::sin(angleChange) * arcRadius,
+                                            arcRadius - std::cos(angleChange) * arcRadius,
+                                            0.0);
+
+            endPos = endPos.rotate(tf::Vector3(0.0, 0.0, 1.0), angleDriveDirection);
+
+            odom.pose.pose.position.x = endPos[0];
+            odom.pose.pose.position.y = endPos[1];
+            odom.pose.pose.position.z = 0.0;
+        }
 
     }
     tf::quaternionTFToMsg(tf::createQuaternionFromYaw(angleChange), odom.pose.pose.orientation);
