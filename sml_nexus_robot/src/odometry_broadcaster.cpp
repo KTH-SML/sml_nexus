@@ -60,8 +60,9 @@ private:
 SmlNexusOdometryBroadcaster::SmlNexusOdometryBroadcaster(){
     ros::NodeHandle nh;
     ns = nh.getNamespace();
+    if (ns == "/") ns = "";
 
-    ROS_INFO_STREAM(ns << " Starting odometry broadcaster");
+    ROS_INFO_STREAM(ns << "Odometry broadcaster: startup...");
 
     //Setup ROS subscribers and publishers
     setSubAndPub(nh);
@@ -74,7 +75,7 @@ SmlNexusOdometryBroadcaster::~SmlNexusOdometryBroadcaster(){}
 //        and pre-fill messages
 //=======================================
 void SmlNexusOdometryBroadcaster::setSubAndPub(ros::NodeHandle& nh_){
-    ROS_INFO_STREAM(ns << " odometry broadcaster: setting up publishers and subscribers...");
+    ROS_INFO_STREAM(ns << "Odometry broadcaster: setting up publishers and subscribers...");
 
     //------------------------------------------
     // Setup wheel velocity feedback subscriber
@@ -114,7 +115,6 @@ void SmlNexusOdometryBroadcaster::wheelVelCallback(const std_msgs::Float32MultiA
     else{
         time_now = ros::Time::now();
         ros::Duration time_interval = time_now - last_received_data;
-        ROS_INFO_STREAM("Time interval:" << std::endl << time_interval << std::endl);
         computeOdometry(odom_msg, msg.data[0], msg.data[1], msg.data[2], msg.data[3], time_interval);
 
         //Publish odometry
@@ -143,28 +143,20 @@ void SmlNexusOdometryBroadcaster::computeOdometry(nav_msgs::Odometry& odom,
                      ros::Duration& time_interval)
 {   
     const nav_msgs::Odometry relativeMotion = computeRelativeMotion(ULWheelVel, URWheelVel, LLWheelVel, LRWheelVel, time_interval.toSec());
-    ROS_INFO_STREAM("Relation motion: " << std::endl << relativeMotion);
     tf2::Quaternion q_prev, q_rot, q_new, new_translation;
     tf2::Vector3 rel_translation;
-
-    ROS_INFO_STREAM("Previous orientation: " << std::endl << odom.pose.pose.orientation << std::endl);
 
     //Convert to quaternion type for computation
     tf2::convert(odom.pose.pose.orientation, q_prev);
     tf2::convert(relativeMotion.pose.pose.orientation, q_rot);
     q_new = q_rot * q_prev;
-    ROS_INFO_STREAM("q_new : " << std::endl << q_new.x() << ", " << q_new.y() << ", " << q_new.z() << ", " << q_new.w() << std::endl);
 
     q_new.normalize();
     tf2::convert(q_new, odom.pose.pose.orientation);
 
-    ROS_INFO_STREAM("q_prev : " << std::endl << q_prev.x() << ", " << q_prev.y() << ", " << q_prev.z() << ", " << q_prev.w() << std::endl);
-    ROS_INFO_STREAM("q_rot : " << std::endl << q_rot.x() << ", " << q_rot.y() << ", " << q_rot.z() << ", " << q_rot.w() << std::endl);
-    ROS_INFO_STREAM("q_new_normalized : " << std::endl << q_new.x() << ", " << q_new.y() << ", " << q_new.z() << ", " << q_new.w() << std::endl);
-
     //Rotate relative translation to odometry frame of reference
     tf2::convert(relativeMotion.pose.pose.position, rel_translation);
-    new_translation = (inverse(q_prev) * rel_translation) * q_prev; //using inverse of q_prev to rotate relative translation to odometry frame
+    new_translation = (q_prev * rel_translation) * q_prev.inverse(); //rotate relative translation to odometry frame
 
     odom.pose.pose.position.x = odom.pose.pose.position.x + new_translation.x();
     odom.pose.pose.position.y = odom.pose.pose.position.y + new_translation.y();
@@ -191,10 +183,9 @@ geometry_msgs::Twist SmlNexusOdometryBroadcaster::computeVel(const float& ULWhee
 }
 
 nav_msgs::Odometry SmlNexusOdometryBroadcaster::computeRelativeMotion(const float& ULWheelVel, const float& URWheelVel, const float& LLWheelVel, const float& LRWheelVel, const float& timeSeconds){
-    ROS_INFO_STREAM(std::endl << "TIME SECONDS: " << timeSeconds << std::endl);
-    nav_msgs::Odometry odom;
+    nav_msgs::Odometry rel_motion;
     const geometry_msgs::Twist vel = computeVel(ULWheelVel, URWheelVel, LLWheelVel, LRWheelVel);
-    odom.twist.twist = vel;
+    rel_motion.twist.twist = vel;
 
     double angleChange = 0.0;
 
@@ -202,9 +193,9 @@ nav_msgs::Odometry SmlNexusOdometryBroadcaster::computeRelativeMotion(const floa
         //----------------
         // Drive straight
         //----------------
-        odom.pose.pose.position.x = static_cast<double>(vel.linear.x*timeSeconds);
-        odom.pose.pose.position.y = static_cast<double>(vel.linear.y*timeSeconds);
-        odom.pose.pose.position.z = 0.0;
+        rel_motion.pose.pose.position.x = static_cast<double>(vel.linear.x*timeSeconds);
+        rel_motion.pose.pose.position.y = static_cast<double>(vel.linear.y*timeSeconds);
+        rel_motion.pose.pose.position.z = 0.0;
 
     } else {
         //---------------------
@@ -217,20 +208,15 @@ nav_msgs::Odometry SmlNexusOdometryBroadcaster::computeRelativeMotion(const floa
 
 
         if (distChange == 0){
-            //Rotating on place
-            odom.pose.pose.position.x = 0.0;
-            odom.pose.pose.position.y = 0.0;
-            odom.pose.pose.position.z = 0.0;
+            //Rotating on the spot
+            rel_motion.pose.pose.position.x = 0.0;
+            rel_motion.pose.pose.position.y = 0.0;
+            rel_motion.pose.pose.position.z = 0.0;
         }
         else{
             const double angleDriveDirection = std::acos(distX / distChange);
 
             const double arcRadius = distChange / angleChange;
-
-            ROS_INFO_STREAM("arcRadius: " << arcRadius << std::endl);
-            ROS_INFO_STREAM("angleChange: " << angleChange << std::endl);
-            ROS_INFO_STREAM("distChange: " << distChange << std::endl);
-            ROS_INFO_STREAM("angleDriveDirection: " << angleDriveDirection << std::endl);
 
             tf::Vector3 endPos = tf::Vector3(std::sin(angleChange) * arcRadius,
                                             arcRadius - std::cos(angleChange) * arcRadius,
@@ -238,14 +224,14 @@ nav_msgs::Odometry SmlNexusOdometryBroadcaster::computeRelativeMotion(const floa
 
             endPos = endPos.rotate(tf::Vector3(0.0, 0.0, 1.0), angleDriveDirection);
 
-            odom.pose.pose.position.x = endPos[0];
-            odom.pose.pose.position.y = endPos[1];
-            odom.pose.pose.position.z = 0.0;
+            rel_motion.pose.pose.position.x = endPos[0];
+            rel_motion.pose.pose.position.y = endPos[1];
+            rel_motion.pose.pose.position.z = 0.0;
         }
 
     }
-    tf::quaternionTFToMsg(tf::createQuaternionFromYaw(angleChange), odom.pose.pose.orientation);
-    return odom;
+    tf::quaternionTFToMsg(tf::createQuaternionFromYaw(angleChange), rel_motion.pose.pose.orientation);
+    return rel_motion;
 }
 
 
