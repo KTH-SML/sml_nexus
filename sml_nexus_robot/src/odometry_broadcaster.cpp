@@ -230,7 +230,7 @@ nav_msgs::Odometry SmlNexusOdometryBroadcaster::computeRelativeMotion(const floa
             rel_motion.pose.pose.position.z = 0.0;
         }
         else{
-            const double angleDriveDirection = std::atan(distY / distX);
+            const double angleDriveDirection = std::atan2(distY, distX);
 
             const double arcRadius = distChange / angleChange;
 
