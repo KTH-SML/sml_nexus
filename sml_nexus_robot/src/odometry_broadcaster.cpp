@@ -64,8 +64,8 @@ private:
 //=====================
 SmlNexusOdometryBroadcaster::SmlNexusOdometryBroadcaster(){
     ros::NodeHandle nh;
-    ns = nh.getNamespace();
-    if (ns == "/") ns = "";
+    ns = nh.getNamespace()+"/";
+    if (ns == "//") ns = "";
 
     ROS_INFO_STREAM(ns << "Odometry broadcaster: startup...");
 
@@ -116,6 +116,7 @@ void SmlNexusOdometryBroadcaster::wheelVelCallback(const std_msgs::Float32MultiA
         //If first message do nothing but init last received data time
         last_received_data = ros::Time::now();
         init = true;
+        ROS_INFO_STREAM(ns << "Odometry broadcaster: initialized and receiving data!");
     }
     else{
         time_now = ros::Time::now();
@@ -158,7 +159,6 @@ void SmlNexusOdometryBroadcaster::computeOdometry(nav_msgs::Odometry& odom,
                      const float& time_interval_seconds)
 {   
     const nav_msgs::Odometry relativeMotion = computeRelativeMotion(ULWheelVel, URWheelVel, LLWheelVel, LRWheelVel, time_interval_seconds);
-    ROS_INFO_STREAM("Relative motion " << std::endl << relativeMotion << std::endl);
     tf2::Quaternion q_prev, q_rot, q_new, new_translation;
     tf2::Vector3 rel_translation;
 
