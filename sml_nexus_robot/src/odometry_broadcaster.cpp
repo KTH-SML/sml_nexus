@@ -17,12 +17,17 @@ public:
     ~SmlNexusOdometryBroadcaster();
 private:
     void wheelVelCallback(const std_msgs::Float32MultiArray& msg);
+
+    void runOdometry(const std_msgs::Float32MultiArray& msg_,
+                     const float& time_interval_sec_,
+                     const ros::Time& time_stamp);
+
     void computeOdometry(nav_msgs::Odometry& odom,
                          const float& ULWheelVel,
                          const float& URWheelVel,
                          const float& LLWheelVel, 
                          const float& LRWheelVel, 
-                         ros::Duration& time_interval);
+                         const float& time_interval_seconds);
 
     geometry_msgs::Twist computeVel(const float& ULWheelVel,
                                     const float& URWheelVel,
@@ -115,10 +120,25 @@ void SmlNexusOdometryBroadcaster::wheelVelCallback(const std_msgs::Float32MultiA
     else{
         time_now = ros::Time::now();
         ros::Duration time_interval = time_now - last_received_data;
-        computeOdometry(odom_msg, msg.data[0], msg.data[1], msg.data[2], msg.data[3], time_interval);
+        float time_interval_sec = time_interval.toSec();
+
+        if (time_interval_sec < 2.0){
+            runOdometry(msg, time_interval_sec, time_now);
+            last_received_data = time_now;
+        }
+        else{
+            ROS_WARN_STREAM(ns << "Odometry broadcaster: last data received " << time_interval_sec << " sec ago, odometry might lose accuracy");
+            last_received_data = time_now;
+        }
+    }
+    
+}
+
+void SmlNexusOdometryBroadcaster::runOdometry(const std_msgs::Float32MultiArray& msg_, const float& time_interval_sec_, const ros::Time& time_stamp){
+        computeOdometry(odom_msg, msg_.data[0], msg_.data[1], msg_.data[2], msg_.data[3], time_interval_sec_);
 
         //Publish odometry
-        odom_msg.header.stamp = time_now;
+        odom_msg.header.stamp = time_stamp;
         odom_pub.publish(odom_msg);
 
         //Publish transform
@@ -128,11 +148,6 @@ void SmlNexusOdometryBroadcaster::wheelVelCallback(const std_msgs::Float32MultiA
         odom_transform.transform.rotation = odom_msg.pose.pose.orientation;
         transform_broadcaster.sendTransform(odom_transform);
 
-        last_received_data = time_now;
-    }
-    
-
-
 }
 
 void SmlNexusOdometryBroadcaster::computeOdometry(nav_msgs::Odometry& odom,
@@ -140,9 +155,10 @@ void SmlNexusOdometryBroadcaster::computeOdometry(nav_msgs::Odometry& odom,
                      const float& URWheelVel,
                      const float& LLWheelVel, 
                      const float& LRWheelVel, 
-                     ros::Duration& time_interval)
+                     const float& time_interval_seconds)
 {   
-    const nav_msgs::Odometry relativeMotion = computeRelativeMotion(ULWheelVel, URWheelVel, LLWheelVel, LRWheelVel, time_interval.toSec());
+    const nav_msgs::Odometry relativeMotion = computeRelativeMotion(ULWheelVel, URWheelVel, LLWheelVel, LRWheelVel, time_interval_seconds);
+    ROS_INFO_STREAM("Relative motion " << std::endl << relativeMotion << std::endl);
     tf2::Quaternion q_prev, q_rot, q_new, new_translation;
     tf2::Vector3 rel_translation;
 
@@ -214,7 +230,7 @@ nav_msgs::Odometry SmlNexusOdometryBroadcaster::computeRelativeMotion(const floa
             rel_motion.pose.pose.position.z = 0.0;
         }
         else{
-            const double angleDriveDirection = std::acos(distX / distChange);
+            const double angleDriveDirection = std::atan(distY / distX);
 
             const double arcRadius = distChange / angleChange;
 
