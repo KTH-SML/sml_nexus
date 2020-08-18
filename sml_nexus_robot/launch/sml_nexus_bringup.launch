@@ -5,5 +5,6 @@
         <node name="rosserial_$(arg robot_name)" pkg="rosserial_python" type="serial_node.py" output="screen" required="true">
             <param name="port" value="/dev/ttyACM0"/>
         </node>
+        <node name="odometry_broadcaster" pkg="sml_nexus_robot" type="odometry_broadcaster" output="screen" required="true" />
     </group>
 </launch>
