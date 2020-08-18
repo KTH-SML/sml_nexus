@@ -57,20 +57,20 @@ std_msgs::Byte sensorStepMsg;
 std_msgs::ByteMultiArray sensorCommMsg;
 std_msgs::String sensorStatusMsg;
 
-char leftSensorFrame[] = "sml_nexus_left_sensor";
-char rearSensorFrame[] = "sml_nexus_left_sensor";
-char rightSensorFrame[] = "sml_nexus_left_sensor";
-char frontSensorFrame[] = "sml_nexus_left_sensor";
+char leftSensorFrame[] = "left_sonar";
+char rearSensorFrame[] = "rear_sonar";
+char rightSensorFrame[] = "right_sonar";
+char frontSensorFrame[] = "front_sonar";
 
 //Setup publishers
-ros::Publisher leftSensorDistPub("sml_nexus_left_range", &sensorDistMsg);
-ros::Publisher rearSensorDistPub("sml_nexus_rear_range", &sensorDistMsg);
-ros::Publisher rightSensorDistPub("sml_nexus_right_range", &sensorDistMsg);
-ros::Publisher frontSensorDistPub("sml_nexus_front_range", &sensorDistMsg);
-ros::Publisher leftSensorTempPub("sml_nexus_left_temperature", &leftSensorTempMsg);
-ros::Publisher rearSensorTempPub("sml_nexus_rear_temperature", &rearSensorTempMsg);
-ros::Publisher rightSensorTempPub("sml_nexus_right_temperature", &rightSensorTempMsg);
-ros::Publisher frontSensorTempPub("sml_nexus_front_temperature", &frontSensorTempMsg);
+ros::Publisher leftSensorDistPub("left_range", &sensorDistMsg);
+ros::Publisher rearSensorDistPub("rear_range", &sensorDistMsg);
+ros::Publisher rightSensorDistPub("right_range", &sensorDistMsg);
+ros::Publisher frontSensorDistPub("front_range", &sensorDistMsg);
+ros::Publisher leftSensorTempPub("left_temperature", &leftSensorTempMsg);
+ros::Publisher rearSensorTempPub("rear_temperature", &rearSensorTempMsg);
+ros::Publisher rightSensorTempPub("right_temperature", &rightSensorTempMsg);
+ros::Publisher frontSensorTempPub("front_temperature", &frontSensorTempMsg);
 //ros::Publisher sensorStepPub("sensor_step", &sensorStepMsg);
 //ros::Publisher sensorStatusPub("sensor_status", &sensorStatusMsg);
 //ros::Publisher sensorCommPub("sensor_serial_comm", &sensorCommMsg);

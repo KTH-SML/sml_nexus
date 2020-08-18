@@ -14,39 +14,37 @@ TO BE USED ON ARDUINO MEGA
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <PID_v1.h>
+#include "sml_nexus_motor.h"
 
 /******************** Variables ****************/
-
-// Create the motor shield object with the default I2C address
-Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
 
 unsigned long prevUpdateTime;
 double long updateOldness;
 double long now;
 
 //UR wheel motor
-int intCount1 = 0;
-#define MOTOR1_ENC_A 3
-#define MOTOR1_ENC_B 13
-Adafruit_DCMotor *URMotor = AFMS.getMotor(1);
-
-//LR wheel motor
-int intCount2 = 0;
-#define MOTOR2_ENC_A 19
-#define MOTOR2_ENC_B A12
-Adafruit_DCMotor *LRMotor = AFMS.getMotor(2);
-
-//LL wheel motor
 int intCount3 = 0;
 #define MOTOR3_ENC_A 18
 #define MOTOR3_ENC_B A14
-Adafruit_DCMotor *LLMotor = AFMS.getMotor(3);
+nexusMotor URMotor(8, 9);
 
-//UL wheel motor
+//LR wheel motor
 int intCount4 = 0;
 #define MOTOR4_ENC_A 2
 #define MOTOR4_ENC_B 12
-Adafruit_DCMotor *ULMotor = AFMS.getMotor(4);
+nexusMotor LRMotor(10, 11);
+
+//LL wheel motor
+int intCount1 = 0;
+#define MOTOR1_ENC_A 3
+#define MOTOR1_ENC_B 13
+nexusMotor LLMotor(5, 44);
+
+//UL wheel motor
+int intCount2 = 0;
+#define MOTOR2_ENC_A 19
+#define MOTOR2_ENC_B A12
+nexusMotor ULMotor(7, 6);
 
 double outputPIDUL = 0;
 double outputPIDUR = 0;
@@ -57,8 +55,8 @@ float control_signal;
 
 double measUL, measUR, measLL, measLR;
 
-double L1 = 150;
-double L2 = 150;
+double L1 = 0.15; //distance between upper wheels, in m
+double L2 = 0.15; //distance between upper and lower wheel axles, in m
 
 double long lastReceivedCommTimeout;
 double long commTimeout = 500; // ms
@@ -93,7 +91,7 @@ const float wheel_radius = 0.05;  //Wheel radius (in m)
 const double speed_to_pwm_ratio = 120;     //Ratio to convert speed (in m/s) to PWM value. It was obtained by plotting the wheel speed in relation to the PWM motor command.
 
 double max_speed = 0.5; //max speed per wheel in m/s
-double min_speed = 0.005; //minimum that will stop the motor command if reached, in m/s
+double min_speed = 0.008; //minimum that will stop the motor command if reached, in m/s
 
 //-----------------------------------
 // Setup a PID object for each wheel
@@ -101,17 +99,22 @@ double min_speed = 0.005; //minimum that will stop the motor command if reached,
 // PID Parameters, respectively Kp, Ki and Kd
 float PID_default_params[] = { 5.0, 0.0, 0.0 };
 // Feedforward default gain
-float feedForwardPolyDefault[] = { 4, 270, 4900, -23000, 40000, -23000};
+float feedForwardPolyDefault[] = { 21, 115, 1200, -2000, 1200 };
+
+int min_cmd_UL = 0;
+int min_cmd_UR = 0;
+int min_cmd_LL = 0;
+int min_cmd_LR = 0;
 
 float PID_UL_params[3];
 float PID_UR_params[3];
 float PID_LL_params[3];
 float PID_LR_params[3];
 
-float feedForwardPolyUL[6];
-float feedForwardPolyUR[6];
-float feedForwardPolyLL[6];
-float feedForwardPolyLR[6];
+float feedForwardPolyUL[5];
+float feedForwardPolyUR[5];
+float feedForwardPolyLL[5];
+float feedForwardPolyLR[5];
 
 //PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, Direction) 
 PID PID_UL(&measUL, &outputPIDUL, &ULspeed, PID_default_params[0], PID_default_params[1], PID_default_params[2], DIRECT);
@@ -171,10 +174,10 @@ static inline int8_t sgn(int val) {
 //------------------------------------
 // Setup ROS publishers & subscribers
 //------------------------------------
-ros::Subscriber<geometry_msgs::Twist> cmd_sub("cmdvel", &messageCb );
+ros::Subscriber<geometry_msgs::Twist> cmd_sub("cmd_vel", &messageCb );
 //ros::Subscriber<std_msgs :: Float32MultiArray> pid_sub("pid_tuning", &pidCb );
 std_msgs :: Float32MultiArray meas_msg;
-ros::Publisher measuredVelPub("velocity", &meas_msg);
+ros::Publisher measuredVelPub("wheel_velocity", &meas_msg);
 //std_msgs :: Float32MultiArray output_msg;
 //std_msgs :: Float32MultiArray pwm_msg;
 //ros::Publisher output_pub("output", &output_msg);
@@ -202,13 +205,12 @@ void setupPIDParams(){
     nh.logwarn("UL motor PID: loading default values;");
   }
 
-  if(!nh.getParam("feedforward_UL", feedForwardPolyUL, 6, 300)){
+  if(!nh.getParam("feedforward_UL", feedForwardPolyUL, 5, 300)){
     feedForwardPolyUL[0] = feedForwardPolyDefault[0];
     feedForwardPolyUL[1] = feedForwardPolyDefault[1];
     feedForwardPolyUL[2] = feedForwardPolyDefault[2];
     feedForwardPolyUL[3] = feedForwardPolyDefault[3];
     feedForwardPolyUL[4] = feedForwardPolyDefault[4];
-    feedForwardPolyUL[5] = feedForwardPolyDefault[5];
     nh.logwarn("UL motor feedforward gain: loading default values;");
   }
 
@@ -219,13 +221,12 @@ void setupPIDParams(){
     nh.logwarn("UR motor PID: loading default values;");
   }
 
-  if(!nh.getParam("feedforward_UR", feedForwardPolyUR, 6, 300)){
+  if(!nh.getParam("feedforward_UR", feedForwardPolyUR, 5, 300)){
     feedForwardPolyUR[0] = feedForwardPolyDefault[0];
     feedForwardPolyUR[1] = feedForwardPolyDefault[1];
     feedForwardPolyUR[2] = feedForwardPolyDefault[2];
     feedForwardPolyUR[3] = feedForwardPolyDefault[3];
     feedForwardPolyUR[4] = feedForwardPolyDefault[4];
-    feedForwardPolyUR[5] = feedForwardPolyDefault[5];
     nh.logwarn("UR motor feedforward gain: loading default values;");
   }
 
@@ -236,13 +237,12 @@ void setupPIDParams(){
     nh.logwarn("LL motor PID: loading default values;");
   }
 
-  if(!nh.getParam("feedforward_LL", feedForwardPolyLL, 6, 300)){
+  if(!nh.getParam("feedforward_LL", feedForwardPolyLL, 5, 300)){
     feedForwardPolyLL[0] = feedForwardPolyDefault[0];
     feedForwardPolyLL[1] = feedForwardPolyDefault[1];
     feedForwardPolyLL[2] = feedForwardPolyDefault[2];
     feedForwardPolyLL[3] = feedForwardPolyDefault[3];
     feedForwardPolyLL[4] = feedForwardPolyDefault[4];
-    feedForwardPolyLL[5] = feedForwardPolyDefault[5];
     nh.logwarn("LL motor feedforward gain: loading default values;");
   }
   if(!nh.getParam("PID_LR", PID_LR_params, 3, 300)){
@@ -252,14 +252,26 @@ void setupPIDParams(){
     nh.logwarn("LR motor PID: loading default values;");
   }
 
-  if(!nh.getParam("feedforward_LR", feedForwardPolyLR, 6, 300)){
+  if(!nh.getParam("feedforward_LR", feedForwardPolyLR, 5, 300)){
     feedForwardPolyLR[0] = feedForwardPolyDefault[0];
     feedForwardPolyLR[1] = feedForwardPolyDefault[1];
     feedForwardPolyLR[2] = feedForwardPolyDefault[2];
     feedForwardPolyLR[3] = feedForwardPolyDefault[3];
     feedForwardPolyLR[4] = feedForwardPolyDefault[4];
-    feedForwardPolyLR[5] = feedForwardPolyDefault[5];
     nh.logwarn("LR motor feedforward gain: loading default values;");
+  }
+
+  if(!nh.getParam("min_cmd_UL", &min_cmd_UL)){
+    nh.logwarn("UL motor minimum PWM cmd: loading default values;");
+  }
+  if(!nh.getParam("min_cmd_UR", &min_cmd_UR)){
+    nh.logwarn("UR motor minimum PWM cmd: loading default values;");
+  }
+  if(!nh.getParam("min_cmd_LL", &min_cmd_LL)){
+    nh.logwarn("LL motor minimum PWM cmd: loading default values;");
+  }
+  if(!nh.getParam("min_cmd_LR", &min_cmd_LR)){
+    nh.logwarn("LR motor minimum PWM cmd: loading default values;");
   }
     
   //------------------------
@@ -304,10 +316,10 @@ void computeWheelVelCmd(){
   //===================================
   // Map vx, vy, w to each wheel speed 
   //===================================
-  ULspeed = constrain(1*vx - 1*vy - sqrt(sq(L1)+sq(L2))*w, -max_speed, max_speed);
-  URspeed = constrain(1*vx + 1*vy + sqrt(sq(L1)+sq(L2))*w, -max_speed, max_speed);
-  LLspeed = constrain(1*vx + 1*vy - sqrt(sq(L1)+sq(L2))*w, -max_speed, max_speed);
-  LRspeed = constrain(1*vx - 1*vy + sqrt(sq(L1)+sq(L2))*w, -max_speed, max_speed);
+  ULspeed = constrain(1*vx - 1*vy - (L1+L2)*w, -max_speed, max_speed);
+  URspeed = constrain(1*vx + 1*vy + (L1+L2)*w, -max_speed, max_speed);
+  LLspeed = constrain(1*vx + 1*vy - (L1+L2)*w, -max_speed, max_speed);
+  LRspeed = constrain(1*vx - 1*vy + (L1+L2)*w, -max_speed, max_speed);
 }
 
 
@@ -315,13 +327,13 @@ void computeWheelVelCmd(){
 /************ Get wheel velocities from encoders  ************/
 void getWheelVel(){
   //Compute speed:  Get rads from tick increments       convert to rad/s      |v=wr| convert to m/s
-  measLR = ((double)intCount3/1536)*(2*3.1415) * ((double)1000/updateOldness) * wheel_radius;
+  measUR = ((float)intCount3/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
   intCount3 = 0;
-  measUR = ((float)intCount4/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
+  measLR = ((float)intCount4/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
   intCount4 = 0;
-  measUL = ((float)intCount1/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
+  measLL = ((float)intCount1/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
   intCount1 = 0;
-  measLL = ((float)intCount2/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
+  measUL = ((float)intCount2/1536)*(2*3.1415) * ((float)1000/updateOldness) * wheel_radius;
   intCount2 = 0;
 }
 
@@ -341,60 +353,64 @@ void computeMotorInputs(){
   if (abs(ULspeed) > min_speed){
     // Compute feedforward polynomial command
     polyCmdUL = 0;
-    for(int i=0; i<6; i++){
-      polyCmdUL += feedForwardPolyUL[i]*pow((float)ULspeed,i);
+    for(int i=0; i<5; i++){
+      polyCmdUL += feedForwardPolyUL[i]*pow((float)abs(ULspeed),i);
     }
+    if (ULspeed < 0) polyCmdUL = -polyCmdUL;
     // Compute PID output
     PID_UL.Compute();
     pwmUL = (int)polyCmdUL + (int)outputPIDUL;
     // Constrain to minimum PWM command
-    //if (ULspeed > 0) pwmUL = constrain( pwmUL, 10, 200 );
-    //else             pwmUL = constrain( pwmUL, -200, -10 );
+    if (ULspeed > 0) pwmUL = constrain( pwmUL, min_cmd_UL, 245 );
+    else             pwmUL = constrain( pwmUL, -245, -min_cmd_UL );
   }
   //--------
   //For UR wheel motor
   if (abs(URspeed) > min_speed){
     // Compute feedforward polynomial command
     polyCmdUR = 0;
-    for(int i=0; i<6; i++){
-      polyCmdUR += feedForwardPolyUR[i]*pow((float)URspeed,i);
+    for(int i=0; i<5; i++){
+      polyCmdUR += feedForwardPolyUR[i]*pow((float)abs(URspeed),i);
     }
+    if (URspeed < 0) polyCmdUR = -polyCmdUR;
     // Compute PID output
     PID_UR.Compute();
     pwmUR = (int)polyCmdUR + (int)outputPIDUR;
     // Constrain to minimum PWM command
-    //if (URspeed > 0) pwmUR = constrain( pwmUR, 10, 200 );
-    //else             pwmUR = constrain( pwmUR, -200, -10 );
+    if (URspeed > 0) pwmUR = constrain( pwmUR, min_cmd_UR, 245 );
+    else             pwmUR = constrain( pwmUR, -245, -min_cmd_UR );
   }
   //---------
   //For LL wheel motor
   if (abs(LLspeed) > min_speed){
     // Compute feedforward polynomial command
     polyCmdLL = 0;
-    for(int i=0; i<6; i++){
-      polyCmdLL += feedForwardPolyLL[i]*pow((float)LLspeed,i);
+    for(int i=0; i<5; i++){
+      polyCmdLL += feedForwardPolyLL[i]*pow((float)abs(LLspeed),i);
     }
+    if (LLspeed < 0) polyCmdLL = -polyCmdLL;
     // Compute PID output
     PID_LL.Compute();
     pwmLL = (int)polyCmdLL + (int)outputPIDLL;
     // Constrain to minimum PWM command
-    //if (LLspeed > 0) pwmLL = constrain( pwmLL, 10, 200 );
-    //else             pwmLL = constrain( pwmLL, -200, -10 );
+    if (LLspeed > 0) pwmLL = constrain( pwmLL, min_cmd_LL, 245 );
+    else             pwmLL = constrain( pwmLL, -245, -min_cmd_LL );
   }
   //---------
   //For LR wheel motor
   if (abs(LRspeed) > min_speed){
     // Compute feedforward polynomial command
     polyCmdLR = 0;
-    for(int i=0; i<6; i++){
-      polyCmdLR += feedForwardPolyLR[i]*pow((float)LRspeed,i);
+    for(int i=0; i<5; i++){
+      polyCmdLR += feedForwardPolyLR[i]*pow((float)abs(LRspeed),i);
     }
+    if (LRspeed < 0) polyCmdLR = -polyCmdLR;
     // Compute PID output
     PID_LR.Compute();
     pwmLR = (int)polyCmdLR + (int)outputPIDLR;
     // Constrain to minimum PWM command
-    //if (LRspeed > 0) pwmLR = constrain( pwmLR, 10, 200 );
-    //else             pwmLR = constrain( pwmLR, -200, -10 );
+    if (LRspeed > 0) pwmLR = constrain( pwmLR, min_cmd_LR, 245 );
+    else             pwmLR = constrain( pwmLR, -245, -min_cmd_LR );
   }       
 }
 
@@ -402,45 +418,32 @@ void computeMotorInputs(){
 
 /************ Apply previously computed motor command  ************/
 void applyMotorInputs(){
-  //Set motor direction
-  if (pwmUL>0) ULMotor->run(BACKWARD);
-  else if (pwmUL<0) ULMotor->run(FORWARD);
-  else ULMotor->run(RELEASE);
-  if (pwmUR>0) URMotor->run(BACKWARD);
-  else if (pwmUR<0) URMotor->run(FORWARD);
-  else URMotor->run(RELEASE);
-  if (pwmLL>0) LLMotor->run(BACKWARD);
-  else if (pwmLL<0) LLMotor->run(FORWARD);
-  else LLMotor->run(RELEASE);
-  if (pwmLR>0) LRMotor->run(BACKWARD);
-  else if (pwmLR<0) LRMotor->run(FORWARD);
-  else LRMotor->run(RELEASE);
   //Set motor speeds
-  LRMotor->setSpeed(abs(pwmLR));
-  LLMotor->setSpeed(abs(pwmLL));
-  ULMotor->setSpeed(abs(pwmUL));
-  URMotor->setSpeed(abs(pwmUR));
+  LRMotor.setSpeed(pwmLR);
+  LLMotor.setSpeed(pwmLL);
+  ULMotor.setSpeed(pwmUL);
+  URMotor.setSpeed(pwmUR);
 }
 
 
 
 /************ Encoders interrupt functions ************/
-void encoderM1A(){
-  if (digitalRead(MOTOR1_ENC_A) == digitalRead(MOTOR1_ENC_B)) ++intCount1;
-  else --intCount1;
+void encoderLL(){
+  if (digitalRead(MOTOR1_ENC_A) == digitalRead(MOTOR1_ENC_B)) --intCount1;
+  else ++intCount1;
 }
 
-void encoderM2A(){
-  if (digitalRead(MOTOR2_ENC_A) == digitalRead(MOTOR2_ENC_B)) ++intCount2;
-  else --intCount2;
+void encoderUL(){
+  if (digitalRead(MOTOR2_ENC_A) == digitalRead(MOTOR2_ENC_B)) --intCount2;
+  else ++intCount2;
 }
 
-void encoderM3A(){
-  if (digitalRead(MOTOR3_ENC_A) == digitalRead(MOTOR3_ENC_B)) --intCount3;
-  else ++intCount3;
+void encoderUR(){
+  if (digitalRead(MOTOR3_ENC_A) == digitalRead(MOTOR3_ENC_B)) ++intCount3;
+  else --intCount3;
 }
 
-void encoderM4A(){
-  if (digitalRead(MOTOR4_ENC_A) == digitalRead(MOTOR4_ENC_B)) --intCount4;
-  else ++intCount4;
+void encoderLR(){
+  if (digitalRead(MOTOR4_ENC_A) == digitalRead(MOTOR4_ENC_B)) ++intCount4;
+  else --intCount4;
 }

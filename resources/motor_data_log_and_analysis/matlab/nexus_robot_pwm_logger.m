@@ -16,12 +16,12 @@ clear global;
 %          Connect to ROS
 %  ================================
 % clear all
-setenv('ROS_MASTER_URI','http://12.0.10.255:11311');
+setenv('ROS_MASTER_URI','http://12.0.4.6:11311');
 % setenv('ROS_HOSTNAME','12.0.10.245');
 setenv('ROS_IP','12.0.10.255');
 rosshutdown
 pause(0.5);
-rosinit('127.0.0.1',11311);
+rosinit('12.0.4.6',11311);
 
 %------------------
 % Setup publishers
@@ -41,7 +41,7 @@ freq = 50;
 r = rosrate(freq);
 
 n=52;
-wait_time = 2; %in seconds
+wait_time = 4; %in seconds
 commands = linspace(0, 255, n);
 
 log_vel = [vel_message];
