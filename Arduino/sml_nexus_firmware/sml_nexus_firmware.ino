@@ -73,8 +73,8 @@ void setup() {
   // Start ROS node, publishers & subscribers
   //------------------------------------------
   //Init measured speed message
-  meas_msg.data_length = 4;
-  meas_msg.data = (float*)malloc(sizeof(float)*4);
+  meas_msg.data_length = 5;
+  meas_msg.data = (float*)malloc(sizeof(float)*5);
   //output_msg.data_length = 4;
   //output_msg.data = (float*)malloc(sizeof(float)*4);
   //pwm_msg.data_length = 4;
@@ -194,6 +194,8 @@ void loop() {
     meas_msg.data[1] = measUR;
     meas_msg.data[2] = measLL;
     meas_msg.data[3] = measLR;
+    meas_msg.data[4] = updateOldness;
+    
     // Publish message
     measuredVelPub.publish(&meas_msg);
 //    // output_pub.publish(&output_msg);

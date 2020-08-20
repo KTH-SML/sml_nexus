@@ -19,7 +19,6 @@ private:
     void wheelVelCallback(const std_msgs::Float32MultiArray& msg);
 
     void runOdometry(const std_msgs::Float32MultiArray& msg_,
-                     const float& time_interval_sec_,
                      const ros::Time& time_stamp);
 
     void computeOdometry(nav_msgs::Odometry& odom,
@@ -27,7 +26,7 @@ private:
                          const float& URWheelVel,
                          const float& LLWheelVel, 
                          const float& LRWheelVel, 
-                         const float& time_interval_seconds);
+                         const float& time_interval_ms);
 
     geometry_msgs::Twist computeVel(const float& ULWheelVel,
                                     const float& URWheelVel,
@@ -109,7 +108,7 @@ void SmlNexusOdometryBroadcaster::setSubAndPub(ros::NodeHandle& nh_){
 
 
 void SmlNexusOdometryBroadcaster::wheelVelCallback(const std_msgs::Float32MultiArray& msg){
-    if (msg.data.size() != 4){
+    if (msg.data.size() != 5){
         //Exit if msg is malformed
     }
     else if (!init){
@@ -124,7 +123,7 @@ void SmlNexusOdometryBroadcaster::wheelVelCallback(const std_msgs::Float32MultiA
         float time_interval_sec = time_interval.toSec();
 
         if (time_interval_sec < 2.0){
-            runOdometry(msg, time_interval_sec, time_now);
+            runOdometry(msg, time_now);
             last_received_data = time_now;
         }
         else{
@@ -135,8 +134,8 @@ void SmlNexusOdometryBroadcaster::wheelVelCallback(const std_msgs::Float32MultiA
     
 }
 
-void SmlNexusOdometryBroadcaster::runOdometry(const std_msgs::Float32MultiArray& msg_, const float& time_interval_sec_, const ros::Time& time_stamp){
-        computeOdometry(odom_msg, msg_.data[0], msg_.data[1], msg_.data[2], msg_.data[3], time_interval_sec_);
+void SmlNexusOdometryBroadcaster::runOdometry(const std_msgs::Float32MultiArray& msg_, const ros::Time& time_stamp){
+        computeOdometry(odom_msg, msg_.data[0], msg_.data[1], msg_.data[2], msg_.data[3], msg_.data[4]);
 
         //Publish odometry
         odom_msg.header.stamp = time_stamp;
@@ -156,9 +155,9 @@ void SmlNexusOdometryBroadcaster::computeOdometry(nav_msgs::Odometry& odom,
                      const float& URWheelVel,
                      const float& LLWheelVel, 
                      const float& LRWheelVel, 
-                     const float& time_interval_seconds)
+                     const float& time_interval_ms)
 {   
-    const nav_msgs::Odometry relativeMotion = computeRelativeMotion(ULWheelVel, URWheelVel, LLWheelVel, LRWheelVel, time_interval_seconds);
+    const nav_msgs::Odometry relativeMotion = computeRelativeMotion(ULWheelVel, URWheelVel, LLWheelVel, LRWheelVel, time_interval_ms / 1000);
     tf2::Quaternion q_prev, q_rot, q_new, new_translation;
     tf2::Vector3 rel_translation;
 
