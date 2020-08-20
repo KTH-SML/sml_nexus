@@ -34,7 +34,7 @@ char buff[10];
 
 unsigned int sensorData[8];
 
-byte sensorAddresses[]  = {0x11, 0x12, 0x13, 0x14}; //RS-485 addresses of respectively left, rear, right and front sensor
+byte sensorAddresses[]  = {0x11, 0x12, 0x13, 0x14}; //RS-485 addresses of respectively right, front, left and rear sensor
 byte sensorTriggerCmd[] = {0x55, 0xaa, 0xff, 0x00, 0x01, 0xff};
 byte sensorDistCmd[]    = {0x55, 0xaa, 0xff, 0x00, 0x02, 0xff};
 byte sensorTempCmd[]    = {0x55, 0xaa, 0xff, 0x00, 0x03, 0xff};
@@ -164,7 +164,7 @@ void runSensor(){
       //--------------
       // Get distance
       //--------------
-      // Get distance from left sensor
+      // Get distance from right sensor
       case 1:
         //sensorStatusMsg.data = "Dist sensor 1";
         //sensorStatusPub.publish(&sensorStatusMsg);
@@ -172,7 +172,7 @@ void runSensor(){
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
-      // Get distance from rear sensor
+      // Get distance from front sensor
       case 2:
         //sensorStatusMsg.data = "Dist sensor 2";
         //sensorStatusPub.publish(&sensorStatusMsg);
@@ -180,7 +180,7 @@ void runSensor(){
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
-      // Get distance from right sensor
+      // Get distance from left sensor
       case 3:
         //sensorStatusMsg.data = "Dist sensor 3";
         //sensorStatusPub.publish(&sensorStatusMsg);
@@ -188,7 +188,7 @@ void runSensor(){
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
-      // Get distance from right sensor
+      // Get distance from rear sensor
       case 4:
         //sensorStatusMsg.data = "Dist sensor 4";
         //sensorStatusPub.publish(&sensorStatusMsg);
@@ -206,7 +206,7 @@ void runSensor(){
       //-----------------
       // Get temperature
       //-----------------
-      // Get temperature from left sensor
+      // Get temperature from right sensor
       case 6:
         //sensorStatusMsg.data = "Temp sensor 1";
         //sensorStatusPub.publish(&sensorStatusMsg);
@@ -214,7 +214,7 @@ void runSensor(){
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
-      // Get temperature from rear sensor
+      // Get temperature from front sensor
       case 7:
         //sensorStatusMsg.data = "Temp sensor 2";
         //sensorStatusPub.publish(&sensorStatusMsg);
@@ -222,7 +222,7 @@ void runSensor(){
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
-      // Get temperature from right sensor
+      // Get temperature from left sensor
       case 8:
         //sensorStatusMsg.data = "Temp sensor 3";
         //sensorStatusPub.publish(&sensorStatusMsg);
@@ -230,7 +230,7 @@ void runSensor(){
         sensorStepTimer = sensorCommDelay; //Wait for communication with sensor
         break;
 
-      // Get temperature from right sensor
+      // Get temperature from rear sensor
       case 9:
         //sensorStatusMsg.data = "Temp sensor 4";
         //sensorStatusPub.publish(&sensorStatusMsg);
@@ -393,52 +393,52 @@ void publishSensorData(){
   //sensorData array from 0 to 3 is distance
   if(sensorData[0] != 65535){
   //if(true){ 
-    leftSensorDistMsg.header.stamp = nh.now();
-    leftSensorDistMsg.range = sensorData[0];
-    leftSensorDistPub.publish(&leftSensorDistMsg);
+    rightSensorDistMsg.header.stamp = nh.now();
+    rightSensorDistMsg.range = sensorData[0];
+    rightSensorDistPub.publish(&rightSensorDistMsg);
   }
   if(sensorData[1] != 65535){
   //if(true){
-    rearSensorDistMsg.header.stamp = nh.now();
-    rearSensorDistMsg.range = sensorData[1];
-    rearSensorDistPub.publish(&rearSensorDistMsg);
+    frontSensorDistMsg.header.stamp = nh.now();
+    frontSensorDistMsg.range = sensorData[1];
+    frontSensorDistPub.publish(&frontSensorDistMsg);
   }
   if(sensorData[2] != 65535){
   //if(true){
-    rightSensorDistMsg.header.stamp = nh.now();
-    rightSensorDistMsg.range = sensorData[2];
-    rightSensorDistPub.publish(&rightSensorDistMsg);
+    leftSensorDistMsg.header.stamp = nh.now();
+    leftSensorDistMsg.range = sensorData[2];
+    leftSensorDistPub.publish(&leftSensorDistMsg);
   }
   if(sensorData[3] != 65535){
   //if(true){
-    frontSensorDistMsg.header.stamp = nh.now();
-    frontSensorDistMsg.range = sensorData[3];
-    frontSensorDistPub.publish(&frontSensorDistMsg);
+    rearSensorDistMsg.header.stamp = nh.now();
+    rearSensorDistMsg.range = sensorData[3];
+    rearSensorDistPub.publish(&rearSensorDistMsg);
   }
   //sensorData array from 4 to 7 is temperature
   if(sensorData[4] != 65535){
   //if(true){
-    leftSensorTempMsg.header.stamp = nh.now();
-    leftSensorTempMsg.temperature = sensorData[4];
-    leftSensorTempPub.publish(&leftSensorTempMsg);
+    rightSensorTempMsg.header.stamp = nh.now();
+    rightSensorTempMsg.temperature = sensorData[4];
+    rightSensorTempPub.publish(&rightSensorTempMsg);
   }
   if(sensorData[5] != 65535){
   //if(true){
-    rearSensorTempMsg.header.stamp = nh.now();
-    rearSensorTempMsg.temperature = sensorData[5];
-    rearSensorTempPub.publish(&rearSensorTempMsg);
+    frontSensorTempMsg.header.stamp = nh.now();
+    frontSensorTempMsg.temperature = sensorData[5];
+    frontSensorTempPub.publish(&frontSensorTempMsg);
   }
   if(sensorData[6] != 65535){
   //if(true){
-    rightSensorTempMsg.header.stamp = nh.now();
-    rightSensorTempMsg.temperature = sensorData[6];
-    rightSensorTempPub.publish(&rightSensorTempMsg);
+    leftSensorTempMsg.header.stamp = nh.now();
+    leftSensorTempMsg.temperature = sensorData[6];
+    leftSensorTempPub.publish(&leftSensorTempMsg);
   }
   if(sensorData[7] != 65535){
   //if(true){
-    frontSensorTempMsg.header.stamp = nh.now();
-    frontSensorTempMsg.temperature = sensorData[7];
-    frontSensorTempPub.publish(&frontSensorTempMsg);
+    rearSensorTempMsg.header.stamp = nh.now();
+    rearSensorTempMsg.temperature = sensorData[7];
+    rearSensorTempPub.publish(&rearSensorTempMsg);
   }
   
 }
