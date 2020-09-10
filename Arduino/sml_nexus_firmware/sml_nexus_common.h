@@ -38,7 +38,7 @@ nexusMotor LRMotor(10, 11);
 int intCount1 = 0;
 #define MOTOR1_ENC_A 3
 #define MOTOR1_ENC_B 13
-nexusMotor LLMotor(5, 44);
+nexusMotor LLMotor(5, 12);
 
 //UL wheel motor
 int intCount2 = 0;
