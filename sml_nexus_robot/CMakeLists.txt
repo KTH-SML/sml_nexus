@@ -9,6 +9,7 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED
  tf2
+ tf2_geometry_msgs
  tf
  roscpp
  nav_msgs)
@@ -24,7 +25,7 @@ find_package(catkin REQUIRED
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  CATKIN_DEPENDS tf tf2 nav_msgs
+  CATKIN_DEPENDS tf tf2 nav_msgs tf2_geometry_msgs
 )
 
 ###########
