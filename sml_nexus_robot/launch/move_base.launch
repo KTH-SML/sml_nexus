@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find sml_nexus_robot)/config/planner.yaml" command="load"/>
+
+    <!-- common costmap attributes -->
+    <rosparam file="$(find sml_nexus_robot)/config/costmap_common.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find sml_nexus_robot)/config/costmap_common.yaml" command="load" ns="local_costmap" />
+
+    <!-- static local costmap -->
+    <rosparam file="$(find sml_nexus_robot)/config/local_costmap_static.yaml" command="load" ns="local_costmap" />
+
+    <!-- static global costmap -->
+    <rosparam file="$(find sml_nexus_robot)/config/global_costmap_static.yaml" command="load" ns="global_costmap"/>
+    
+    <!-- Global & local planners -->
+    <param name="base_global_planner" type="string" value="navfn/NavfnROS" />
+    <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS"/>
+    
+  </node>
+
+</launch>
