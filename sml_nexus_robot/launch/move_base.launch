@@ -15,7 +15,7 @@
     <rosparam file="$(find sml_nexus_robot)/config/navigation/global_costmap_static.yaml" command="load" ns="global_costmap"/>
     
     <!-- Global & local planners -->
-    <param name="base_global_planner" type="string" value="base_global_planner/NavfnROS" />
+    <param name="base_global_planner" type="string" value="navfn/NavfnROS" />
     <param name="planner_frequency" value="1.0" />
     <param name="planner_patience" value="5.0" />
 
