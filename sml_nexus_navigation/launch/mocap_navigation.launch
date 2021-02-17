@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="agent_name" default="nexus"/>
+  <arg name="run_mocap" default="false" />
+
+  <group if="$(arg run_mocap)">
+    <!-- Motion capture node for localization -->
+    <include file="$(find mocap_qualisys)/launch/qualisys.launch" >
+      <param name="publish_tf" value="false" />
+    </include>
+  </group>
+  
+  <!-- Generates transform from map to odom frame using pose from mocap -->
+  <remap from="base_pose_ground_truth" to="/qualisys/$(arg agent_name)/odom" />
+  <node pkg="fake_localization" type="fake_localization" respawn="false" name="fake_localization" output="screen" />
+  
+  <include file="$(find sml_nexus_navigation)/launch/move_base.launch" >
+  </include>
+  
+</launch>

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sml_nexus_navigation</name>
+  <version>0.1.0</version>
+  <description>Contains elements for running navigation on the Nexus 4-mecanum-wheel-drive holonomic robot of KTH Smart Mobility Lab </description>
+
+  <author email="rbaran@kth.se">Robin Baran</author>
+  <maintainer email="rbaran@kth.se">Robin Baran</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>tf</build_depend>
+  <build_export_depend>roscpp</build_export_depend>
+  <build_export_depend>tf</build_export_depend>
+  <exec_depend>map_server</exec_depend>
+  <exec_depend>fake_localization</exec_depend>
+  <exec_depend>mocap_qualisys</exec_depend>
+  <exec_depend>move_base</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>sml_nexus_robot</exec_depend>
+  <exec_depend>tf</exec_depend>
+
+</package>
