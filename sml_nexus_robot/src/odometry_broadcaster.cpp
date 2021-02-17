@@ -142,6 +142,7 @@ void SmlNexusOdometryBroadcaster::runOdometry(const std_msgs::Float32MultiArray&
         odom_pub.publish(odom_msg);
 
         //Publish transform
+        odom_transform.header.stamp = time_stamp;
         odom_transform.transform.translation.x = odom_msg.pose.pose.position.x;
         odom_transform.transform.translation.y = odom_msg.pose.pose.position.y;
         odom_transform.transform.translation.z = odom_msg.pose.pose.position.z;
