@@ -1,5 +1,5 @@
 <launch>   
-    <arg name="robot_name" default="nexus_0" />
+    <arg name="robot_name" default="nexus0" />
     <group ns="$(arg robot_name)">
         <rosparam file="$(find sml_nexus_robot)/config/nexus_pid_params.yaml" command="load" />
         <node name="rosserial_$(arg robot_name)" pkg="rosserial_python" type="serial_node.py" output="screen" required="true">
