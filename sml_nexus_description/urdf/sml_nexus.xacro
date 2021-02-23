@@ -11,7 +11,11 @@
   <material name="dark_grey"><color rgba="0.2 0.2 0.2 1.0" /></material>
   <material name="light_grey"><color rgba="0.4 0.4 0.4 1.0" /></material>
 
-  <link name="base_link">
+  <link name="base_link"></link>
+
+  <link name="base_footprint"></link>
+
+  <link name="nexus_body">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 ${PI}" />
       <geometry>
@@ -36,17 +40,21 @@
     </inertial>
   </link>
 
-  <link name="base_footprint"></link>
-
   <joint name="base_link_joint" type="fixed">
-    <origin xyz="0 0 0.05" rpy="0 0 0" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
     <parent link="base_link"/>
     <child link="base_footprint" />
   </joint>
 
+  <joint name="nexus_body_joint" type="fixed">
+    <origin xyz="0 0 0.05" rpy="0 0 0" />
+    <parent link="base_link"/>
+    <child link="nexus_body" />
+  </joint>
+
   <joint name="upper_left_wheel_shaft_joint" type="fixed">
     <origin xyz="0.150 0.108 0.0" rpy="0 0 0" />
-    <parent link="base_link"/>
+    <parent link="nexus_body"/>
     <child link="upper_left_wheel_shaft" />
   </joint>
 
@@ -76,7 +84,7 @@
 
   <joint name="lower_left_wheel_shaft_joint" type="fixed">
     <origin xyz="-0.150 0.108 0.0" rpy="0 0 0" />
-    <parent link="base_link"/>
+    <parent link="nexus_body"/>
     <child link="lower_left_wheel_shaft" />
   </joint>
 
@@ -106,7 +114,7 @@
 
   <joint name="upper_right_wheel_shaft_joint" type="fixed">
     <origin xyz="0.150 -0.108 0.0" rpy="${PI} 0 0" />
-    <parent link="base_link"/>
+    <parent link="nexus_body"/>
     <child link="upper_right_wheel_shaft" />
   </joint>
 
@@ -136,7 +144,7 @@
 
   <joint name="lower_right_wheel_shaft_joint" type="fixed">
     <origin xyz="-0.150 -0.108 0.0" rpy="${PI} 0 0" />
-    <parent link="base_link"/>
+    <parent link="nexus_body"/>
     <child link="lower_right_wheel_shaft" />
   </joint>
 
@@ -294,7 +302,7 @@
 
   <joint name="left_sensor_joint" type="fixed">
     <origin xyz="0 0.108 0.010" rpy="0 0 ${PI/2}" />
-    <parent link="base_link"/>
+    <parent link="nexus_body"/>
     <child link="left_sensor" />
   </joint>
 
@@ -310,7 +318,7 @@
 
   <joint name="front_sensor_joint" type="fixed">
     <origin xyz="0.201 0 0.010" rpy="0 0 0" />
-    <parent link="base_link"/>
+    <parent link="nexus_body"/>
     <child link="front_sensor" />
   </joint>
 
@@ -326,7 +334,7 @@
 
   <joint name="right_sensor_joint" type="fixed">
     <origin xyz="0 -0.108 0.010" rpy="0 0 ${-PI/2}" />
-    <parent link="base_link"/>
+    <parent link="nexus_body"/>
     <child link="right_sensor" />
   </joint>
 
@@ -342,7 +350,7 @@
 
   <joint name="rear_sensor_joint" type="fixed">
     <origin xyz="-0.205 0 0.010" rpy="0 0 ${PI}" />
-    <parent link="base_link"/>
+    <parent link="nexus_body"/>
     <child link="rear_sensor" />
   </joint>
 

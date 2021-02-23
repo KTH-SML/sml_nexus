@@ -29,7 +29,7 @@
     <gravity>true</gravity>
   </gazebo>
 
-  <gazebo reference="base_link">
+  <gazebo reference="nexus_body">
     <material>Gazebo/Yellow</material>
   </gazebo>
 
