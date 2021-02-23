@@ -11,14 +11,6 @@
   <material name="dark_grey"><color rgba="0.2 0.2 0.2 1.0" /></material>
   <material name="light_grey"><color rgba="0.4 0.4 0.4 1.0" /></material>
 
-  <link name="base_footprint"></link>
-
-  <joint name="base_link_joint" type="fixed">
-    <origin xyz="0 0 0.05" rpy="0 0 0" />
-    <parent link="base_footprint"/>
-    <child link="base_link" />
-  </joint>
-
   <link name="base_link">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 ${PI}" />
@@ -43,6 +35,14 @@
         izz="0.074201740"/>
     </inertial>
   </link>
+
+  <link name="base_footprint"></link>
+
+  <joint name="base_link_joint" type="fixed">
+    <origin xyz="0 0 0.05" rpy="0 0 0" />
+    <parent link="base_link"/>
+    <child link="base_footprint" />
+  </joint>
 
   <joint name="upper_left_wheel_shaft_joint" type="fixed">
     <origin xyz="0.150 0.108 0.0" rpy="0 0 0" />
