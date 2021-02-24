@@ -3,27 +3,52 @@
   <arg name="odom_frame_id"   default="odom"/>
   <arg name="base_frame_id"   default="base_footprint"/>
   <arg name="global_frame_id" default="map"/>
+  <arg name="local_planner"   default="eband"/>
+
+    <!-- choose local planner -->
+    <!-- eband (elastic-band) local planner -->
+    <group if="$(eval local_planner=='eband')" ns="move_base">
+      <rosparam file="$(find sml_nexus_navigation)/config/local_planner/eband_planner.yaml" command="load"/>
+      <param name="base_local_planner" value="eband_local_planner/EBandPlannerROS"/>
+      <param name="controller_frequency" value="5.0" />
+      <param name="controller_patience" value="15.0" />
+    </group>
+    <!-- trajectory default local planner -->
+    <group if="$(eval local_planner=='trajectory')" ns="move_base">
+      <rosparam file="$(find sml_nexus_navigation)/config/local_planner/trajectory_planner.yaml" command="load"/>
+      <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS"/>
+      <param name="controller_frequency" value="5.0" />
+      <param name="controller_patience" value="15.0" />
+    </group>
+    <!-- DWA (Dynamic Window Approach) local planner -->
+    <group if="$(eval local_planner=='dwa')" ns="move_base">
+      <rosparam file="$(find sml_nexus_navigation)/config/local_planner/dwa_planner.yaml" command="load"/>
+      <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS"/>
+      <param name="controller_frequency" value="5.0" />
+      <param name="controller_patience" value="15.0" />
+    </group>
+    <!-- TEB (Time-Elastic Band) local planner -->
+    <group if="$(eval local_planner=='teb')" ns="move_base">
+      <rosparam file="$(find sml_nexus_navigation)/config/local_planner/teb_planner.yaml" command="load"/>
+      <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS"/>
+      <param name="controller_frequency" value="5.0" />
+      <param name="controller_patience" value="15.0" />
+    </group>
 
   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-    <rosparam file="$(find sml_nexus_navigation)/config/planner.yaml" command="load"/>
-
     <!-- common costmap attributes -->
-    <rosparam file="$(find sml_nexus_navigation)/config/costmap_common.yaml" command="load" ns="global_costmap" />
-    <rosparam file="$(find sml_nexus_navigation)/config/costmap_common.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find sml_nexus_navigation)/config/costmap/costmap_common.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find sml_nexus_navigation)/config/costmap/costmap_common.yaml" command="load" ns="local_costmap" />
 
     <!-- static local costmap -->
-    <rosparam file="$(find sml_nexus_navigation)/config/local_costmap_static.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find sml_nexus_navigation)/config/costmap/local_costmap_static.yaml" command="load" ns="local_costmap" />
     <!-- static global costmap -->
-    <rosparam file="$(find sml_nexus_navigation)/config/global_costmap_static.yaml" command="load" ns="global_costmap"/>
+    <rosparam file="$(find sml_nexus_navigation)/config/costmap/global_costmap_static.yaml" command="load" ns="global_costmap"/>
 
-    <!-- Global & local planners -->
+    <!-- Global planner -->
     <param name="base_global_planner" type="string" value="navfn/NavfnROS" />
     <param name="planner_frequency" value="1.0" />
     <param name="planner_patience" value="5.0" />
-
-    <param name="base_local_planner" value="eband_local_planner/EBandPlannerROS"/>
-    <param name="controller_frequency" value="5.0" />
-    <param name="controller_patience" value="15.0" />
    
     <!-- reset frame_id parameters using user input data -->
     <param name="global_costmap/global_frame" value="$(arg global_frame_id)"/>
