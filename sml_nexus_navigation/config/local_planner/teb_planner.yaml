@@ -30,8 +30,8 @@ TebLocalPlannerROS:
    type: "point"
 
  # GoalTolerance
- xy_goal_tolerance: 0.2
- yaw_goal_tolerance: 0.1
+ xy_goal_tolerance: 0.045
+ yaw_goal_tolerance: 0.08
  free_goal_vel: False
  complete_global_plan: True
     
