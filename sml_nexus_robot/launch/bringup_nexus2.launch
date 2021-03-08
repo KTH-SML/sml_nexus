@@ -2,6 +2,9 @@
     <!-- Start everything with nexus2 namespace -->
     <arg name="robot_name" default="nexus2" />
     <group ns="$(arg robot_name)">
+        <!-- Set TF prefix -->       
+        <param name="tf_prefix" value="nexus2" />
+        
         <!-- Robot description and robot state publisher -->
         <include file="$(find sml_nexus_description)/launch/sml_nexus_description.launch"/>
 
