@@ -31,7 +31,7 @@ nexusMotor URMotor(8, 9);
 //LR wheel motor
 int intCount4 = 0;
 #define MOTOR4_ENC_A 2
-#define MOTOR4_ENC_B 12
+#define MOTOR4_ENC_B A13
 nexusMotor LRMotor(10, 11);
 
 //LL wheel motor
