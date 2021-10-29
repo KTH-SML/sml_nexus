@@ -1,6 +1,8 @@
 # SML Nexus
 Repositotry for code and documentation on the customized Nexus 4WD holonomic robots of the SML (Smart Mobility Lab) of KTH.
 
+<img src="/resources/4wd_holonomic_robot.png" align="center" width="600"/>
+
 # Using the Nexus Robot
 ## Bringing up the Nexus robot
 Every Nexus robot includes a companion computer (usually a NVidia TX2) connected to the internal Arduino low-level controller. To use the Nexus, one needs first to connect by SSH to the companion computer (credentials available by asking a lab member, replace COMPANION_COMPUTER_IP by the companion computer IP):
@@ -24,8 +26,10 @@ TODO
 # Robot description
 The robot is a modified 4 mecanum wheel holonomic robot from Nexus Robotics (https://www.nexusrobot.com/product/4wd-mecanum-wheel-mobile-arduino-robotics-car-10011.html).
 
+<img src="/resources/nexus_architecture.png" align="center" width="900"/>
+
 ## Characteristics
-* **max speed:** 0.6m/s
+* **max speed:** 0.6m/s forward
 * **wheel base:** 300mm
 
 ## Actuators
@@ -61,9 +65,3 @@ Package to be run from the robot onboard computer.
 
 ### Config files
 * **nexus_pid_params.yaml** Parameters of the motor controllers
-
-# Setting up a new robot
-### Hardeware
-TODO
-### Software
-TODO
